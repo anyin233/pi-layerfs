@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.pi/
+.layerfs-local/
+*.log
+.build/
+release-out/
+*.tgz
+vendor/layerfs/bin/
+vendor/layerfs/sdk/js/native/
+vendor/layerfs/licenses/
+vendor/layerfs/ARTIFACTS.json

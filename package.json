@@ -1,0 +1,70 @@
+{
+  "name": "pi-layerfs",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "LayerFS projects, isolated worker branches and history dashboard for Pi",
+  "license": "MIT",
+  "author": "cydia2001",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anyin233/pi-layerfs.git"
+  },
+  "homepage": "https://github.com/anyin233/pi-layerfs#readme",
+  "bugs": {
+    "url": "https://github.com/anyin233/pi-layerfs/issues"
+  },
+  "keywords": [
+    "pi-package",
+    "layerfs",
+    "workspaces",
+    "coding-agent"
+  ],
+  "files": [
+    "dist",
+    "src",
+    "vendor/layerfs",
+    "bin",
+    "VERSION",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "README.md",
+    "docs",
+    "examples",
+    "scripts/container-entry.mjs",
+    "scripts/release-smoke.mjs"
+  ],
+  "bin": {
+    "pi-layerfs": "./bin/pi-layerfs"
+  },
+  "pi": {
+    "extensions": [
+      "./src/extension.ts"
+    ]
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts",
+    "test:integration": "tsx scripts/smoke.ts",
+    "test:parity": "tsx scripts/parity-smoke.ts",
+    "test:release": "node scripts/check-package.mjs",
+    "release:build": "node scripts/build-release.mjs",
+    "lint": "biome check src test scripts/*.ts",
+    "format": "biome format --write src test scripts/*.ts"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "1.4.0",
+    "typebox": "1.3.27",
+    "@types/node": "^22.19.0",
+    "@biomejs/biome": "2.6.2",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}

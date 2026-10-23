@@ -1,0 +1,48 @@
+name: checks
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm run lint
+      - name: Validate launch and build scripts
+        run: |
+          bash -n bin/pi-layerfs release/install.sh scripts/build-native.sh scripts/client.sh scripts/prepare.sh
+          for file in scripts/*.mjs; do node --check "$file"; done
+  distribution:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: rustup toolchain install 1.85.1 --profile minimal
+      - run: npm ci
+      - name: Enable FUSE
+        run: sudo modprobe fuse
+      - run: npm run release:build
+      - name: Install from the complete archive
+        run: |
+          mkdir /tmp/pi-layerfs-release
+          tar -xzf release-out/pi-layerfs-*-linux-x64.tar.gz -C /tmp/pi-layerfs-release
+          bash /tmp/pi-layerfs-release/pi-layerfs-*/install.sh --prefix /tmp/pi-layerfs-install --bin-dir /tmp/pi-layerfs-bin --skip-register
+          /tmp/pi-layerfs-bin/pi-layerfs --self-test

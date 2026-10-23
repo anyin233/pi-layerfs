@@ -1,0 +1,7 @@
+.build/
+release-out/
+.layerfs-local/
+node_modules/
+.git/
+*.log
+.env*

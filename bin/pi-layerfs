@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+set -euo pipefail
+package_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+state_dir=${PI_LAYERFS_STATE:-"$package_root/../state"}
+project_dir=$PWD
+manage=false
+mode=pi
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --project) project_dir=${2:?Pass a project directory}; shift 2 ;;
+    --state) state_dir=${2:?Pass an installed state directory}; shift 2 ;;
+    --manage-projects) manage=true; shift ;;
+    --self-test) mode=test; shift; break ;;
+    --exec) mode=exec; shift; break ;;
+    --launcher-help)
+      cat <<'HELP'
+Usage: pi-layerfs [--project DIR] [--state DIR] [Pi options/prompts]
+       pi-layerfs --self-test
+       pi-layerfs --manage-projects
+       pi-layerfs --exec COMMAND [ARGS...]
+
+Each project gets its own Store volume. Host projects are mounted read-only.
+Model credentials and Pi settings share a private control volume outside all
+projects. Use Pi's /login to sign in. --self-test needs no model credentials.
+Install the complete release bundle before starting this launcher.
+HELP
+      exit 0 ;;
+    *) break ;;
+  esac
+done
+[[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || { echo 'This release requires Linux x86_64.' >&2; exit 1; }
+[[ -f "$state_dir/deployment.env" ]] || { echo "No deployment at $state_dir. Run the release bundle's install.sh first." >&2; exit 1; }
+# Generated locally by install.sh in a private 0700 directory.
+source "$state_dir/deployment.env"
+[[ -c /dev/fuse ]] || { echo '/dev/fuse is unavailable.' >&2; exit 1; }
+docker image inspect "$LAYERFS_IMAGE" >/dev/null
+project_dir=$(realpath -- "$project_dir")
+control_volume=${PI_LAYERFS_CONTROL_VOLUME:-$LAYERFS_VOLUME}
+if [[ "$mode" == test ]]; then
+  identity="test-$(date +%s)-$$"
+elif $manage; then
+  identity=manage
+else
+  identity=$(printf '%s' "$project_dir" | sha256sum | cut -c1-12)
+fi
+if ! $manage; then
+  LAYERFS_VOLUME="pi-layerfs-$PI_LAYERFS_INSTANCE-$identity"
+  LAYERFS_CONTAINER_PREFIX="pi-lfs-$PI_LAYERFS_INSTANCE-$identity-"
+  export LAYERFS_VOLUME LAYERFS_CONTAINER_PREFIX
+fi
+if docker volume inspect "$LAYERFS_VOLUME" >/dev/null 2>&1; then
+  owner=$(docker volume inspect --format '{{index .Labels "pi-layerfs.instance"}}' "$LAYERFS_VOLUME")
+  [[ "$owner" == "$PI_LAYERFS_INSTANCE" ]] || { echo 'Store volume belongs to another deployment.' >&2; exit 1; }
+else
+  docker volume create --label "pi-layerfs.instance=$PI_LAYERFS_INSTANCE" --label "pi-layerfs.project-key=$identity" "$LAYERFS_VOLUME" >/dev/null
+fi
+docker run --rm -v "$LAYERFS_VOLUME:/layerfs-store" --entrypoint bash "$LAYERFS_IMAGE" -c 'mkdir -p /layerfs-store/home; chmod 700 /layerfs-store/home'
+mounts=(-v "$LAYERFS_VOLUME:/layerfs-store" -v "$control_volume:/pi-control" -v "$LAYERFS_DOCKER:$LAYERFS_DOCKER")
+if [[ "$mode" != test ]]; then mounts+=(-v "$project_dir:$project_dir:ro"); fi
+if $manage; then
+  mountpoint=$(docker volume inspect --format '{{.Mountpoint}}' "$LAYERFS_VOLUME")
+  PI_LAYERFS_VOLUME_ROOT=$(dirname -- "$(dirname -- "$mountpoint")")
+  export PI_LAYERFS_VOLUME_ROOT
+  mounts+=(-v "$PI_LAYERFS_VOLUME_ROOT:$PI_LAYERFS_VOLUME_ROOT")
+fi
+terminal=(-i)
+if [[ -t 0 && -t 1 ]]; then terminal+=(-t); fi
+if [[ "$mode" == test ]]; then
+  project_dir=/opt/pi-layerfs
+  command=(node /opt/pi-layerfs/scripts/release-smoke.mjs)
+elif [[ "$mode" == exec ]]; then
+  [[ $# -gt 0 ]] || { echo '--exec requires a command.' >&2; exit 1; }
+  command=("$@")
+else
+  command=(node /opt/pi-layerfs/scripts/container-entry.mjs)
+  if $manage; then command+=(--layerfs-manage); fi
+  command+=("$@")
+fi
+launch=(docker run --rm "${terminal[@]}" --network host "${mounts[@]}"
+  --label "pi-layerfs.instance=$PI_LAYERFS_INSTANCE"
+  -e LAYERFS_HOME -e LAYERFS_DOCKER -e LAYERFS_IMAGE -e LAYERFS_VOLUME
+  -e LAYERFS_DAEMON -e LAYERFS_NATIVE -e LAYERFS_STORE_PATH -e LAYERFS_CONTAINER_PREFIX
+  -e PI_LAYERFS_INSTANCE -e PI_LAYERFS_VOLUME_ROOT
+  -e PI_LAYERFS_PLUGIN=/opt/pi-layerfs
+  -e PI_CODING_AGENT_DIR=/pi-control/pi-agent
+  -e PI_OFFLINE=1 -e PI_SKIP_VERSION_CHECK=1
+  -e "UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE:-64}"
+  -w "$project_dir" --entrypoint /usr/bin/env "$LAYERFS_IMAGE" "${command[@]}")
+if [[ "$mode" != test ]]; then exec "${launch[@]}"; fi
+if "${launch[@]}"; then
+  # Successful self-test explicitly closed its Workspaces. Remove only this
+  # invocation's sandbox and Store; failures retain evidence for inspection.
+  sandboxes=$(docker ps -aq --filter "name=^/$LAYERFS_CONTAINER_PREFIX")
+  for sandbox in $sandboxes; do
+    volume=$(docker inspect --format '{{range .Mounts}}{{if eq .Type "volume"}}{{.Name}}{{end}}{{end}}' "$sandbox")
+    [[ "$volume" == "$LAYERFS_VOLUME" ]] || { echo 'Unexpected self-test sandbox mount.' >&2; exit 1; }
+    docker stop "$sandbox" >/dev/null
+    docker rm "$sandbox" >/dev/null
+  done
+  docker volume rm "$LAYERFS_VOLUME" >/dev/null
+else
+  echo "Self-test failed; retained Store $LAYERFS_VOLUME for inspection." >&2
+  exit 1
+fi

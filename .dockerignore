@@ -1,0 +1,10 @@
+node_modules
+.git
+.layerfs-local
+.build
+release-out
+.pi
+*.log
+docs
+assets
+test

@@ -1,0 +1,4 @@
+{
+  "napi-rs-LICENSE": "https://raw.githubusercontent.com/napi-rs/napi-rs/f2178312d0e3e07beecc19836b91716a229107d3/LICENSE",
+  "rsqlite-vfs-LICENSE": "https://raw.githubusercontent.com/Spxg/sqlite-wasm-rs/1bb309784f25c401ddf95131dcde4c4cdad7aee7/LICENSE"
+}

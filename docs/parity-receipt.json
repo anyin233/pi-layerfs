@@ -1,0 +1,3807 @@
+{
+  "source": "Real LayerFS/Pi acceptance. Dashboard tokens, test finish URL and verbose telemetry omitted.",
+  "receipts": [
+    {
+      "step": "init.empty",
+      "value": {
+        "id": "c4763d22-4105-46d4-a4dd-67ee18b33ecb",
+        "project": "parity-6a5f9c05",
+        "state": "ready",
+        "started": 1792708520133,
+        "scanned": {
+          "entries": 1,
+          "files": 0,
+          "bytes": 0
+        },
+        "totals": {
+          "entries": 1,
+          "files": 0,
+          "bytes": 0
+        }
+      }
+    },
+    {
+      "step": "init.import",
+      "value": {
+        "id": "741608de-0610-4074-b128-02366460c44d",
+        "project": "import-6a5f9c05",
+        "state": "ready",
+        "started": 1792708520232,
+        "scanned": {
+          "entries": 2,
+          "files": 1,
+          "bytes": 9
+        },
+        "totals": {
+          "entries": 2,
+          "files": 1,
+          "bytes": 9
+        }
+      }
+    },
+    {
+      "step": "selected",
+      "value": {
+        "project": "parity-6a5f9c05",
+        "branch": "pi-work",
+        "initial": {
+          "ref": "main @ L0",
+          "layer": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+          "commit": null
+        },
+        "head": null,
+        "mounted": [],
+        "ready": true,
+        "failure": null,
+        "diagnostics": {
+          "environment": {
+            "LAYERFS_HOME": "set",
+            "LAYERFS_DOCKER": "set",
+            "LAYERFS_IMAGE": "set",
+            "LAYERFS_VOLUME": "set",
+            "LAYERFS_DAEMON": "set",
+            "LAYERFS_STORE_PATH": "set",
+            "LAYERFS_NATIVE": "set",
+            "LAYERFS_CONTAINER_PREFIX": "set",
+            "LAYERFS_DAEMON_HOST": "unset"
+          },
+          "filesystem": "ext4"
+        },
+        "durability": "Disposable: no crash/power-loss durability",
+        "coverage": "read/write/edit/bash/grep/find/ls; known hashline mutators and powershell blocked; other extensions and host control plane are outside coverage"
+      }
+    },
+    {
+      "step": "layerfs_fs",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "Committed",
+          "branch": "pi-work",
+          "head": "12d35d625cff6d217c139e88409cccbd8bfac2a7d9a82ba15428d732186e599bc5",
+          "commit": {
+            "id": "12d35d625cff6d217c139e88409cccbd8bfac2a7d9a82ba15428d732186e599bc5",
+            "branch": "pi-work",
+            "parent": null,
+            "secondParent": null,
+            "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+            "root": "794d9c5057fd3cc6a26cdf7aa5c9d9b28ea3a91e2d22434024eb7324744b5366",
+            "via": "fs",
+            "message": "Apply filesystem changes",
+            "mergedFrom": null,
+            "time": 1792708520371,
+            "logical": 0,
+            "newCanonical": 392,
+            "newStored": 274,
+            "newMetadata": 274,
+            "displaced": null,
+            "lww": [],
+            "lwwTruncated": false
+          }
+        }
+      }
+    },
+    {
+      "step": "session.binding",
+      "value": {
+        "project": "parity-6a5f9c05",
+        "volume": "pi-layerfs-cc39a7993e258c13-parity-6a5f9c05-1a5cbd736c774c658d6a709421e6210a",
+        "branch": "pi-work",
+        "locked": true,
+        "role": "lead"
+      }
+    },
+    {
+      "step": "layerfs_fs",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "Committed",
+          "branch": "pi-work",
+          "head": "122f0a975d20a8020b97757d4eef1c10de5e8f789542cf12499f726e4525aecbb9",
+          "commit": {
+            "id": "122f0a975d20a8020b97757d4eef1c10de5e8f789542cf12499f726e4525aecbb9",
+            "branch": "pi-work",
+            "parent": "12d35d625cff6d217c139e88409cccbd8bfac2a7d9a82ba15428d732186e599bc5",
+            "secondParent": null,
+            "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+            "root": "9b967a006af12976bce8645663564a49bd46c41bca53c2f25dfc6e709686812e",
+            "via": "fs",
+            "message": "Apply filesystem changes",
+            "mergedFrom": null,
+            "time": 1792708520377,
+            "logical": 10,
+            "newCanonical": 663,
+            "newStored": 377,
+            "newMetadata": 335,
+            "displaced": null,
+            "lww": [],
+            "lwwTruncated": false
+          }
+        }
+      }
+    },
+    {
+      "step": "layerfs_fs",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "Committed",
+          "branch": "pi-work",
+          "head": "120202a8fa2e1ba8756418a4967eeea3f6e160d95175500e12cf8f52b43a44c350",
+          "commit": {
+            "id": "120202a8fa2e1ba8756418a4967eeea3f6e160d95175500e12cf8f52b43a44c350",
+            "branch": "pi-work",
+            "parent": "122f0a975d20a8020b97757d4eef1c10de5e8f789542cf12499f726e4525aecbb9",
+            "secondParent": null,
+            "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+            "root": "4ee7956626b02f7cf1a2be1af1b8cf7be01533613e948663f38290a0dc55df3a",
+            "via": "fs",
+            "message": "Apply filesystem changes",
+            "mergedFrom": null,
+            "time": 1792708520381,
+            "logical": 12,
+            "newCanonical": 699,
+            "newStored": 367,
+            "newMetadata": 328,
+            "displaced": null,
+            "lww": [],
+            "lwwTruncated": false
+          }
+        }
+      }
+    },
+    {
+      "step": "layerfs_fs",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "ok",
+          "snapshot": "pi-work@0202a8fa2e1b",
+          "root": "4ee7956626b02f7cf1a2be1af1b8cf7be01533613e948663f38290a0dc55df3a",
+          "path": "/binary.bin",
+          "type": "file",
+          "inode": 130,
+          "size": 2
+        }
+      }
+    },
+    {
+      "step": "layerfs_workspace",
+      "value": {
+        "isError": false,
+        "result": {
+          "id": "1:/workspaces/1",
+          "sandbox": "1",
+          "path": "/workspaces/1",
+          "image": "sha256:0ee21e3923293d06ed3dd3d653bd513d11eab506e370ef435ee12096cc3dc936",
+          "branch": "pi-work"
+        }
+      }
+    },
+    {
+      "step": "layerfs_workspace",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "exit:0",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "",
+          "message": "Pi retained Workspace command",
+          "truncated": false,
+          "stdoutBytes": 0,
+          "stderrBytes": 0,
+          "timedOut": false,
+          "cancelled": false,
+          "stdoutTruncated": false,
+          "stderrTruncated": false
+        }
+      }
+    },
+    {
+      "step": "layerfs_process",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "running",
+          "process": "proc_1_bea5040a29f69ca55ad7c190",
+          "command": "sleep 30"
+        }
+      }
+    },
+    {
+      "step": "layerfs_process",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "ok",
+          "items": [
+            {
+              "id": "proc_1_bea5040a29f69ca55ad7c190",
+              "sandbox": "1",
+              "path": "/workspaces/1",
+              "command": "sleep 30",
+              "status": "running"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "step": "layerfs_workspace",
+      "value": {
+        "isError": true,
+        "result": {
+          "errors": [
+            {
+              "code": "Busy",
+              "detail": {
+                "processes": ["proc_1_bea5040a29f69ca55ad7c190"]
+              },
+              "message": "Busy: 1:/workspaces/1 is busy: proc_1_bea5040a29f69ca55ad7c190 still running"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "step": "layerfs_process",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "Stopped",
+          "process": "proc_1_bea5040a29f69ca55ad7c190",
+          "status": "stopped"
+        }
+      }
+    },
+    {
+      "step": "layerfs_workspace",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "ok",
+          "base": "120202a8fa2e1ba8756418a4967eeea3f6e160d95175500e12cf8f52b43a44c350",
+          "baseLayer": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+          "branchHead": "120202a8fa2e1ba8756418a4967eeea3f6e160d95175500e12cf8f52b43a44c350",
+          "headMovedSinceMount": false,
+          "activity": "Idle",
+          "overlay": {
+            "inodes": 2,
+            "entries": 1,
+            "pendingMerge": false
+          },
+          "branch": "pi-work"
+        }
+      }
+    },
+    {
+      "step": "layerfs_workspace",
+      "value": {
+        "isError": false,
+        "result": {
+          "inodes": 2,
+          "entries": 1,
+          "payload": 8,
+          "metadata": null,
+          "metadataRows": 3,
+          "changes": {
+            "added": 1,
+            "modified": 0,
+            "removed": 0
+          }
+        }
+      }
+    },
+    {
+      "step": "layerfs_workspace",
+      "value": {
+        "isError": false,
+        "result": {
+          "items": [
+            {
+              "path": "/retained.txt",
+              "kind": "Added",
+              "markers": false
+            }
+          ],
+          "hasMore": false,
+          "nextPagePos": null
+        }
+      }
+    },
+    {
+      "step": "layerfs_workspace",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "Committed",
+          "head": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+          "commit": {
+            "id": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+            "branch": null,
+            "parent": "120202a8fa2e1ba8756418a4967eeea3f6e160d95175500e12cf8f52b43a44c350",
+            "secondParent": null,
+            "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+            "root": "d1f5a161134f549e04f1fb31eb86fab46285e535cc958d80aaadfcebbc581046",
+            "via": "exec",
+            "message": "retained work",
+            "mergedFrom": null,
+            "time": 1792708520832,
+            "logical": 20,
+            "newCanonical": 808,
+            "newStored": 401,
+            "newMetadata": 356,
+            "displaced": null,
+            "lww": [],
+            "lwwTruncated": false
+          },
+          "displacedHead": null,
+          "merged": null,
+          "lww": [],
+          "lwwTruncated": false
+        }
+      }
+    },
+    {
+      "step": "layerfs_workspace",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "Unmounted"
+        }
+      }
+    },
+    {
+      "step": "layerfs_agent",
+      "value": {
+        "isError": false,
+        "result": {
+          "id": "79b5bd1e-a269-47e3-9ed8-aad52f27e074",
+          "label": "Alpha",
+          "branch": "agent-79b5bd1e-a26",
+          "state": "running"
+        }
+      }
+    },
+    {
+      "step": "layerfs_agent",
+      "value": {
+        "isError": false,
+        "result": {
+          "id": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4",
+          "label": "Beta",
+          "branch": "agent-2d8cef85-2d9",
+          "state": "running"
+        }
+      }
+    },
+    {
+      "step": "layerfs_agent",
+      "value": {
+        "isError": false,
+        "result": [
+          {
+            "id": "79b5bd1e-a269-47e3-9ed8-aad52f27e074",
+            "label": "Alpha",
+            "branch": "agent-79b5bd1e-a26",
+            "state": "completed",
+            "result": "Completed owned Branch write."
+          },
+          {
+            "id": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4",
+            "label": "Beta",
+            "branch": "agent-2d8cef85-2d9",
+            "state": "running"
+          }
+        ]
+      }
+    },
+    {
+      "step": "layerfs_agent",
+      "value": {
+        "isError": false,
+        "result": [
+          {
+            "id": "79b5bd1e-a269-47e3-9ed8-aad52f27e074",
+            "label": "Alpha",
+            "branch": "agent-79b5bd1e-a26",
+            "state": "completed",
+            "result": "Completed owned Branch write."
+          },
+          {
+            "id": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4",
+            "label": "Beta",
+            "branch": "agent-2d8cef85-2d9",
+            "state": "completed",
+            "result": "Completed owned Branch write."
+          }
+        ]
+      }
+    },
+    {
+      "step": "layerfs_branch",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "Merged",
+          "fastForward": true,
+          "branch": "joined-alpha",
+          "head": "12ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552",
+          "root": "947531c9299412f73c15b36d3a2cc3212a9e01202a0e2a2a9b6c38846edaafde",
+          "sources": [
+            {
+              "ref": "pi-work",
+              "node": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643"
+            },
+            {
+              "ref": "agent-79b5bd1e-a26",
+              "node": "12ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552"
+            }
+          ],
+          "mergeBase": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+          "conflicts": [],
+          "lww": [],
+          "conflictsTruncated": false,
+          "lwwTruncated": false,
+          "units": [],
+          "unitsTruncated": false
+        }
+      }
+    },
+    {
+      "step": "layerfs_branch",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "Merged",
+          "fastForward": false,
+          "branch": "joined",
+          "head": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+          "root": "5e3cdb1394e78e550444099aecf28df9dfe28759a355d38672027b5511a600ee",
+          "sources": [
+            {
+              "ref": "joined-alpha",
+              "node": "12ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552"
+            },
+            {
+              "ref": "agent-2d8cef85-2d9",
+              "node": "12edbc3bf320c839f21fa2bc2acad95f94ee8f8dd6ef9b8c4f8422e17175052acc"
+            }
+          ],
+          "mergeBase": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+          "conflicts": [],
+          "lww": [],
+          "conflictsTruncated": false,
+          "lwwTruncated": false,
+          "units": [],
+          "unitsTruncated": false
+        }
+      }
+    },
+    {
+      "step": "layerfs_branch",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "ok",
+          "from": {
+            "ref": "pi-work",
+            "label": "pi-work@7b6debbdef78",
+            "root": "d1f5a161134f549e04f1fb31eb86fab46285e535cc958d80aaadfcebbc581046"
+          },
+          "to": {
+            "ref": "joined",
+            "label": "joined@5b9d13009ec6",
+            "root": "5e3cdb1394e78e550444099aecf28df9dfe28759a355d38672027b5511a600ee"
+          },
+          "items": [
+            {
+              "path": "/alpha.txt",
+              "kind": "Added",
+              "type": "file",
+              "before": null,
+              "after": {
+                "type": "file",
+                "inode": 194
+              },
+              "content": false,
+              "identity": false,
+              "metadata": false,
+              "hunks": null,
+              "hunksOmitted": false
+            }
+          ],
+          "hasMore": true,
+          "nextPagePos": 1,
+          "nextCursor": "/alpha.txt"
+        }
+      }
+    },
+    {
+      "step": "layerfs_branch",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "Added",
+          "source": {
+            "branch": "joined",
+            "commit": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0"
+          },
+          "publishedLayer": {
+            "overwroteCount": 0,
+            "logical": 31,
+            "id": "322eeeeca40b4d8176293015fd1265661b95d5f8833002b2e46dd3549c3792e436",
+            "parent": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+            "root": "5e3cdb1394e78e550444099aecf28df9dfe28759a355d38672027b5511a600ee",
+            "sourceBranch": "joined",
+            "sourceCommit": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0"
+          },
+          "basedOn": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+          "overwroteCount": 0,
+          "overwrote": [],
+          "overwroteHasMore": false
+        }
+      }
+    },
+    {
+      "step": "published",
+      "value": {
+        "kind": "Added",
+        "source": {
+          "branch": "joined",
+          "commit": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0"
+        },
+        "publishedLayer": {
+          "overwroteCount": 0,
+          "logical": 31,
+          "id": "322eeeeca40b4d8176293015fd1265661b95d5f8833002b2e46dd3549c3792e436",
+          "parent": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+          "root": "5e3cdb1394e78e550444099aecf28df9dfe28759a355d38672027b5511a600ee",
+          "sourceBranch": "joined",
+          "sourceCommit": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0"
+        },
+        "basedOn": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+        "overwroteCount": 0,
+        "overwrote": [],
+        "overwroteHasMore": false
+      }
+    },
+    {
+      "step": "layerfs_fs",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "ok",
+          "snapshot": "main@2eeeeca40b4d",
+          "root": "5e3cdb1394e78e550444099aecf28df9dfe28759a355d38672027b5511a600ee",
+          "path": "/alpha.txt",
+          "text": "alpha\n",
+          "startLine": 1,
+          "endLine": 1,
+          "lineTruncated": false,
+          "truncated": false,
+          "nextLine": null,
+          "size": 6
+        }
+      }
+    },
+    {
+      "step": "layerfs_fs",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "ok",
+          "snapshot": "main@2eeeeca40b4d",
+          "root": "5e3cdb1394e78e550444099aecf28df9dfe28759a355d38672027b5511a600ee",
+          "path": "/beta.txt",
+          "text": "beta\n",
+          "startLine": 1,
+          "endLine": 1,
+          "lineTruncated": false,
+          "truncated": false,
+          "nextLine": null,
+          "size": 5
+        }
+      }
+    },
+    {
+      "step": "layerfs_fs",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "ok",
+          "snapshot": "main@2eeeeca40b4d",
+          "root": "5e3cdb1394e78e550444099aecf28df9dfe28759a355d38672027b5511a600ee",
+          "path": "/retained.txt",
+          "text": "retained",
+          "startLine": 1,
+          "endLine": 1,
+          "lineTruncated": false,
+          "truncated": false,
+          "nextLine": null,
+          "size": 8
+        }
+      }
+    },
+    {
+      "step": "layerfs_fs",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "ok",
+          "snapshot": "joined@5b9d13009ec6",
+          "root": "5e3cdb1394e78e550444099aecf28df9dfe28759a355d38672027b5511a600ee",
+          "path": "/alpha.txt",
+          "lines": [
+            {
+              "n": 1,
+              "text": "alpha",
+              "lineTruncated": false,
+              "clipped": false,
+              "commit": "12ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552",
+              "message": "Apply filesystem changes"
+            }
+          ],
+          "origins": [],
+          "versions": 2,
+          "comparisonCoarse": false,
+          "nextLine": null
+        }
+      }
+    },
+    {
+      "step": "layerfs_inspect",
+      "value": {
+        "isError": false,
+        "result": {
+          "items": [
+            {
+              "commit": "12ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552",
+              "message": "Apply filesystem changes",
+              "change": "Added",
+              "size": 6,
+              "object": "55015ab2ab0809161ee5968ddae66fff22bbf85b2e0f563d4db2215d8f4e6acc",
+              "newCanonical": null,
+              "newStored": null
+            }
+          ],
+          "hasMore": false,
+          "nextPagePos": null
+        }
+      }
+    },
+    {
+      "step": "layerfs_inspect",
+      "value": {
+        "isError": false,
+        "result": {
+          "size": 6,
+          "revisions": 1,
+          "revisionsMore": false,
+          "logical": 6,
+          "canonical": null,
+          "stored": null,
+          "metadata": null
+        }
+      }
+    },
+    {
+      "step": "layerfs_branch",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "Forked",
+          "branch": "conflict-a",
+          "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+          "head": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0"
+        }
+      }
+    },
+    {
+      "step": "layerfs_branch",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "Forked",
+          "branch": "conflict-b",
+          "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+          "head": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0"
+        }
+      }
+    },
+    {
+      "step": "layerfs_fs",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "Committed",
+          "branch": "conflict-a",
+          "head": "12df97bd2d4d8b0bb34d4ed64ea19bb4cd1bce32c5c4bdae8315aab603e29482eb",
+          "commit": {
+            "id": "12df97bd2d4d8b0bb34d4ed64ea19bb4cd1bce32c5c4bdae8315aab603e29482eb",
+            "branch": "conflict-a",
+            "parent": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+            "secondParent": null,
+            "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+            "root": "b5b9cfa3b6af63071256cb3a0eb16185083ff87c5369f5c8a13eb5bc5298473b",
+            "via": "fs",
+            "message": "Apply filesystem changes",
+            "mergedFrom": null,
+            "time": 1792708521114,
+            "logical": 33,
+            "newCanonical": 1104,
+            "newStored": 465,
+            "newMetadata": 426,
+            "displaced": null,
+            "lww": [],
+            "lwwTruncated": false
+          }
+        }
+      }
+    },
+    {
+      "step": "layerfs_fs",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "Committed",
+          "branch": "conflict-b",
+          "head": "12c70d21d2534bf6c1617cf076fe0184771b3e1c87b6b114e55a12994a661a1515",
+          "commit": {
+            "id": "12c70d21d2534bf6c1617cf076fe0184771b3e1c87b6b114e55a12994a661a1515",
+            "branch": "conflict-b",
+            "parent": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+            "secondParent": null,
+            "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+            "root": "e0e048985667f148a6d39ede621fbac25ed988d7616638c69789f94bde57bed5",
+            "via": "fs",
+            "message": "Apply filesystem changes",
+            "mergedFrom": null,
+            "time": 1792708521121,
+            "logical": 33,
+            "newCanonical": 1104,
+            "newStored": 464,
+            "newMetadata": 425,
+            "displaced": null,
+            "lww": [],
+            "lwwTruncated": false
+          }
+        }
+      }
+    },
+    {
+      "step": "layerfs_branch",
+      "value": {
+        "isError": true,
+        "result": {
+          "errors": [
+            {
+              "code": "Conflict",
+              "detail": {
+                "sources": [
+                  {
+                    "ref": "conflict-a",
+                    "node": "12df97bd2d4d8b0bb34d4ed64ea19bb4cd1bce32c5c4bdae8315aab603e29482eb"
+                  },
+                  {
+                    "ref": "conflict-b",
+                    "node": "12c70d21d2534bf6c1617cf076fe0184771b3e1c87b6b114e55a12994a661a1515"
+                  }
+                ],
+                "mergeBase": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+                "conflicts": [
+                  {
+                    "path": "/conflict.txt",
+                    "kind": "add/add",
+                    "blocks": 1,
+                    "hunksOmitted": false,
+                    "hunks": [
+                      {
+                        "line": 1,
+                        "ours": ["A"],
+                        "theirs": ["B"]
+                      }
+                    ]
+                  }
+                ],
+                "lww": [],
+                "conflictsTruncated": false,
+                "lwwTruncated": false,
+                "units": [],
+                "unitsTruncated": false
+              },
+              "message": "Conflict: conflict-a + conflict-b conflict in 1 file(s); nothing was created"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "step": "layerfs_fs",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "Committed",
+          "branch": "conflict-b",
+          "head": "127702554d9aef402c751385e0c7edf10dd2b4b9a34119ade8edd4394ac624621c",
+          "commit": {
+            "id": "127702554d9aef402c751385e0c7edf10dd2b4b9a34119ade8edd4394ac624621c",
+            "branch": "conflict-b",
+            "parent": "12c70d21d2534bf6c1617cf076fe0184771b3e1c87b6b114e55a12994a661a1515",
+            "secondParent": null,
+            "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+            "root": "135f31f212eb1ca1f9ff73623bec4299457ea55d9c2b10e09d6875661aea32ec",
+            "via": "fs",
+            "message": "Apply filesystem changes",
+            "mergedFrom": null,
+            "time": 1792708521130,
+            "logical": 33,
+            "newCanonical": 902,
+            "newStored": 251,
+            "newMetadata": 251,
+            "displaced": null,
+            "lww": [],
+            "lwwTruncated": false
+          }
+        }
+      }
+    },
+    {
+      "step": "layerfs_branch",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "Merged",
+          "fastForward": false,
+          "branch": "resolved",
+          "head": "124c1a8ddac0720bd4940f2aa7e1a697154737582572e1c106389595b52b964389",
+          "root": "135f31f212eb1ca1f9ff73623bec4299457ea55d9c2b10e09d6875661aea32ec",
+          "sources": [
+            {
+              "ref": "conflict-a",
+              "node": "12df97bd2d4d8b0bb34d4ed64ea19bb4cd1bce32c5c4bdae8315aab603e29482eb"
+            },
+            {
+              "ref": "conflict-b",
+              "node": "127702554d9aef402c751385e0c7edf10dd2b4b9a34119ade8edd4394ac624621c"
+            }
+          ],
+          "mergeBase": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+          "conflicts": [],
+          "lww": [],
+          "conflictsTruncated": false,
+          "lwwTruncated": false,
+          "units": [],
+          "unitsTruncated": false
+        }
+      }
+    },
+    {
+      "step": "layerfs_inspect",
+      "value": {
+        "isError": false,
+        "result": {
+          "kind": "ok",
+          "version": "c52d998e65069255.c52d998e65069255",
+          "project": "parity-6a5f9c05",
+          "store": {
+            "stats": {
+              "logical": 287,
+              "canonical": 8756,
+              "stored": 4054,
+              "metadata": 220895,
+              "file": 221184,
+              "free": 0,
+              "dedupe": "0.032778",
+              "compression": "2.159842",
+              "init": {
+                "entries": 1,
+                "files": 0,
+                "bytes": 0,
+                "canonical": 298,
+                "stored": 258,
+                "metadata": 212992,
+                "millis": 6
+              }
+            }
+          },
+          "branches": [
+            {
+              "name": "main",
+              "base": "322eeeeca40b4d8176293015fd1265661b95d5f8833002b2e46dd3549c3792e436",
+              "head": null
+            },
+            {
+              "name": "agent-2d8cef85-2d9",
+              "forkedFrom": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "head": "12edbc3bf320c839f21fa2bc2acad95f94ee8f8dd6ef9b8c4f8422e17175052acc"
+            },
+            {
+              "name": "agent-79b5bd1e-a26",
+              "forkedFrom": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "head": "12ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552"
+            },
+            {
+              "name": "conflict-a",
+              "forkedFrom": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "head": "12df97bd2d4d8b0bb34d4ed64ea19bb4cd1bce32c5c4bdae8315aab603e29482eb"
+            },
+            {
+              "name": "conflict-b",
+              "forkedFrom": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "head": "127702554d9aef402c751385e0c7edf10dd2b4b9a34119ade8edd4394ac624621c"
+            },
+            {
+              "name": "joined",
+              "forkedFrom": "12ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552",
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "head": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0"
+            },
+            {
+              "name": "joined-alpha",
+              "forkedFrom": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "head": "12ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552"
+            },
+            {
+              "name": "pi-work",
+              "forkedFrom": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "head": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643"
+            },
+            {
+              "name": "resolved",
+              "forkedFrom": "12df97bd2d4d8b0bb34d4ed64ea19bb4cd1bce32c5c4bdae8315aab603e29482eb",
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "head": "124c1a8ddac0720bd4940f2aa7e1a697154737582572e1c106389595b52b964389"
+            }
+          ],
+          "moreBranches": false,
+          "commits": [
+            {
+              "id": "12edbc3bf320c839f21fa2bc2acad95f94ee8f8dd6ef9b8c4f8422e17175052acc",
+              "branch": "agent-2d8cef85-2d9",
+              "parent": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+              "secondParent": null,
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "3797084ea63c5d64ae6474a36478c5fa75855db795533629ea110b9b16f65a56",
+              "via": "fs",
+              "message": "Apply filesystem changes",
+              "mergedFrom": null,
+              "time": 1792708520982,
+              "logical": 25,
+              "newCanonical": 904,
+              "newStored": 408,
+              "newMetadata": 366,
+              "displaced": null,
+              "lww": [],
+              "lwwTruncated": false
+            },
+            {
+              "id": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+              "branch": "pi-work",
+              "parent": "120202a8fa2e1ba8756418a4967eeea3f6e160d95175500e12cf8f52b43a44c350",
+              "secondParent": null,
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "d1f5a161134f549e04f1fb31eb86fab46285e535cc958d80aaadfcebbc581046",
+              "via": "exec",
+              "message": "retained work",
+              "mergedFrom": null,
+              "time": 1792708520832,
+              "logical": 20,
+              "newCanonical": 808,
+              "newStored": 401,
+              "newMetadata": 356,
+              "displaced": null,
+              "lww": [],
+              "lwwTruncated": false
+            },
+            {
+              "id": "120202a8fa2e1ba8756418a4967eeea3f6e160d95175500e12cf8f52b43a44c350",
+              "branch": "pi-work",
+              "parent": "122f0a975d20a8020b97757d4eef1c10de5e8f789542cf12499f726e4525aecbb9",
+              "secondParent": null,
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "4ee7956626b02f7cf1a2be1af1b8cf7be01533613e948663f38290a0dc55df3a",
+              "via": "fs",
+              "message": "Apply filesystem changes",
+              "mergedFrom": null,
+              "time": 1792708520381,
+              "logical": 12,
+              "newCanonical": 699,
+              "newStored": 367,
+              "newMetadata": 328,
+              "displaced": null,
+              "lww": [],
+              "lwwTruncated": false
+            },
+            {
+              "id": "12ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552",
+              "branch": "agent-79b5bd1e-a26",
+              "parent": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+              "secondParent": null,
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "947531c9299412f73c15b36d3a2cc3212a9e01202a0e2a2a9b6c38846edaafde",
+              "via": "fs",
+              "message": "Apply filesystem changes",
+              "mergedFrom": null,
+              "time": 1792708520958,
+              "logical": 26,
+              "newCanonical": 906,
+              "newStored": 409,
+              "newMetadata": 366,
+              "displaced": null,
+              "lww": [],
+              "lwwTruncated": false
+            },
+            {
+              "id": "12df97bd2d4d8b0bb34d4ed64ea19bb4cd1bce32c5c4bdae8315aab603e29482eb",
+              "branch": "conflict-a",
+              "parent": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+              "secondParent": null,
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "b5b9cfa3b6af63071256cb3a0eb16185083ff87c5369f5c8a13eb5bc5298473b",
+              "via": "fs",
+              "message": "Apply filesystem changes",
+              "mergedFrom": null,
+              "time": 1792708521114,
+              "logical": 33,
+              "newCanonical": 1104,
+              "newStored": 465,
+              "newMetadata": 426,
+              "displaced": null,
+              "lww": [],
+              "lwwTruncated": false
+            },
+            {
+              "id": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+              "branch": "joined",
+              "parent": "12ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552",
+              "secondParent": "12edbc3bf320c839f21fa2bc2acad95f94ee8f8dd6ef9b8c4f8422e17175052acc",
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "5e3cdb1394e78e550444099aecf28df9dfe28759a355d38672027b5511a600ee",
+              "via": "merge",
+              "message": "integrate Beta",
+              "mergedFrom": null,
+              "time": 1792708521084,
+              "logical": 31,
+              "newCanonical": 976,
+              "newStored": 380,
+              "newMetadata": 380,
+              "displaced": null,
+              "lww": [],
+              "lwwTruncated": false
+            },
+            {
+              "id": "127702554d9aef402c751385e0c7edf10dd2b4b9a34119ade8edd4394ac624621c",
+              "branch": "conflict-b",
+              "parent": "12c70d21d2534bf6c1617cf076fe0184771b3e1c87b6b114e55a12994a661a1515",
+              "secondParent": null,
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "135f31f212eb1ca1f9ff73623bec4299457ea55d9c2b10e09d6875661aea32ec",
+              "via": "fs",
+              "message": "Apply filesystem changes",
+              "mergedFrom": null,
+              "time": 1792708521130,
+              "logical": 33,
+              "newCanonical": 902,
+              "newStored": 251,
+              "newMetadata": 251,
+              "displaced": null,
+              "lww": [],
+              "lwwTruncated": false
+            },
+            {
+              "id": "12c70d21d2534bf6c1617cf076fe0184771b3e1c87b6b114e55a12994a661a1515",
+              "branch": "conflict-b",
+              "parent": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+              "secondParent": null,
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "e0e048985667f148a6d39ede621fbac25ed988d7616638c69789f94bde57bed5",
+              "via": "fs",
+              "message": "Apply filesystem changes",
+              "mergedFrom": null,
+              "time": 1792708521121,
+              "logical": 33,
+              "newCanonical": 1104,
+              "newStored": 464,
+              "newMetadata": 425,
+              "displaced": null,
+              "lww": [],
+              "lwwTruncated": false
+            },
+            {
+              "id": "122f0a975d20a8020b97757d4eef1c10de5e8f789542cf12499f726e4525aecbb9",
+              "branch": "pi-work",
+              "parent": "12d35d625cff6d217c139e88409cccbd8bfac2a7d9a82ba15428d732186e599bc5",
+              "secondParent": null,
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "9b967a006af12976bce8645663564a49bd46c41bca53c2f25dfc6e709686812e",
+              "via": "fs",
+              "message": "Apply filesystem changes",
+              "mergedFrom": null,
+              "time": 1792708520377,
+              "logical": 10,
+              "newCanonical": 663,
+              "newStored": 377,
+              "newMetadata": 335,
+              "displaced": null,
+              "lww": [],
+              "lwwTruncated": false
+            },
+            {
+              "id": "124c1a8ddac0720bd4940f2aa7e1a697154737582572e1c106389595b52b964389",
+              "branch": "resolved",
+              "parent": "12df97bd2d4d8b0bb34d4ed64ea19bb4cd1bce32c5c4bdae8315aab603e29482eb",
+              "secondParent": "127702554d9aef402c751385e0c7edf10dd2b4b9a34119ade8edd4394ac624621c",
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "135f31f212eb1ca1f9ff73623bec4299457ea55d9c2b10e09d6875661aea32ec",
+              "via": "merge",
+              "message": "Merge conflict-a and conflict-b",
+              "mergedFrom": null,
+              "time": 1792708521134,
+              "logical": 33,
+              "newCanonical": 0,
+              "newStored": 0,
+              "newMetadata": 0,
+              "displaced": null,
+              "lww": [],
+              "lwwTruncated": false
+            }
+          ],
+          "more": {
+            "agent-2d8cef85-2d9": "0203822234181b7b03de66932f0f7c42a09bae806bf452fe36c0141930883d39e3c7000000000000000111112005186c972d7779977e56d62ef80c04000000000000000000000000000000002112edbc3bf320c839f21fa2bc2acad95f94ee8f8dd6ef9b8c4f8422e17175052acc21120202a8fa2e1ba8756418a4967eeea3f6e160d95175500e12cf8f52b43a44c3501add703aadaa78dabebdb6a45e9c7ac5",
+            "agent-79b5bd1e-a26": "0203822234181b7b03de66932f0f7c42a09bae806bf452fe36c0141930883d39e3c700000000000000011111cb689b0b06bee9d8d8bda32f216153b9000000000000000000000000000000002112ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b55221120202a8fa2e1ba8756418a4967eeea3f6e160d95175500e12cf8f52b43a44c3502886a512de64f36738244a2082a8a6a4",
+            "conflict-a": "0203822234181b7b03de66932f0f7c42a09bae806bf452fe36c0141930883d39e3c700000000000000011111ff38391bbe1e49e71be8b46ce0f46085000000000000000000000000000000002112df97bd2d4d8b0bb34d4ed64ea19bb4cd1bce32c5c4bdae8315aab603e29482eb2112ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552e873b2e970143259c82569596c47cc8e",
+            "conflict-b": "0203822234181b7b03de66932f0f7c42a09bae806bf452fe36c0141930883d39e3c700000000000000011111a8b826b96cc9f876238d7111f887014f0000000000000000000000000000000021127702554d9aef402c751385e0c7edf10dd2b4b9a34119ade8edd4394ac624621c21125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0fc335fba10aac5b31072bc5b590cb2d4",
+            "joined": "0203822234181b7b03de66932f0f7c42a09bae806bf452fe36c0141930883d39e3c70000000000000001111147c983f728fdbdb1d1c5bd962644528e0000000000000000000000000000000021125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc021127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c17094126438d68aa98850d443c490eb35c51306053",
+            "joined-alpha": "0203822234181b7b03de66932f0f7c42a09bae806bf452fe36c0141930883d39e3c700000000000000011111e75d5536e9038df4304c6b8204be3fab000000000000000000000000000000002112ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b55221120202a8fa2e1ba8756418a4967eeea3f6e160d95175500e12cf8f52b43a44c35043f1ab2d9c9a3afc7d030b8c2148d825",
+            "pi-work": "0203822234181b7b03de66932f0f7c42a09bae806bf452fe36c0141930883d39e3c700000000000000011111c3756987e911368ae1b07dea956082080000000000000000000000000000000021127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c170941264321122f0a975d20a8020b97757d4eef1c10de5e8f789542cf12499f726e4525aecbb97a3f7be95a7aa078c8a25f5eb2f5b55b",
+            "resolved": "0203822234181b7b03de66932f0f7c42a09bae806bf452fe36c0141930883d39e3c700000000000000011111c0dfa1b6d741e8aa6b781a2045bd7bd90000000000000000000000000000000021124c1a8ddac0720bd4940f2aa7e1a697154737582572e1c106389595b52b96438921125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0747adaa5bee9eba6fa730958b43a3052"
+          },
+          "layers": [
+            {
+              "overwroteCount": 0,
+              "logical": 31,
+              "id": "322eeeeca40b4d8176293015fd1265661b95d5f8833002b2e46dd3549c3792e436",
+              "parent": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "5e3cdb1394e78e550444099aecf28df9dfe28759a355d38672027b5511a600ee",
+              "sourceBranch": "joined",
+              "sourceCommit": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0"
+            },
+            {
+              "overwroteCount": 0,
+              "logical": 0,
+              "id": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "parent": null,
+              "root": "7612711db8b6078404d9730bd3e3239823dca3350f05fa9cc19d37bba2a9944a",
+              "sourceBranch": null,
+              "sourceCommit": null
+            }
+          ],
+          "moreLayers": false,
+          "sandboxes": [
+            {
+              "id": "1",
+              "name": "pi-lfs-3873c40a5559-parity-6a5f9c05-1",
+              "image": "sha256:0ee21e3923293d06ed3dd3d653bd513d11eab506e370ef435ee12096cc3dc936",
+              "status": "Ready",
+              "workspaces": []
+            }
+          ],
+          "gone": []
+        }
+      }
+    },
+    {
+      "step": "layerfs_inspect",
+      "value": {
+        "isError": false,
+        "result": {
+          "actors": [
+            {
+              "agent": "29d8e45b-0378-4e73-aa98-ac6a6f2fa7af",
+              "label": "import",
+              "role": "lead",
+              "branch": "pi-work",
+              "state": "closed",
+              "time": 1792708520172
+            },
+            {
+              "agent": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4",
+              "label": "Beta",
+              "role": "worker",
+              "branch": "agent-2d8cef85-2d9",
+              "state": "closed",
+              "time": 1792708520986
+            },
+            {
+              "agent": "79b5bd1e-a269-47e3-9ed8-aad52f27e074",
+              "label": "Alpha",
+              "role": "worker",
+              "branch": "agent-79b5bd1e-a26",
+              "state": "closed",
+              "time": 1792708520965
+            },
+            {
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "role": "lead",
+              "branch": "pi-work",
+              "state": "active",
+              "time": 1792708520364
+            }
+          ],
+          "calls": [
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-4",
+              "step": "29d8e45b-0378-4e73-aa98-ac6a6f2fa7af",
+              "method": "project.init",
+              "args": {
+                "path": "/layerfs-store/home/pi-projects/empty/parity-6a5f9c05-dMd1sh",
+                "name": "parity-6a5f9c05"
+              },
+              "start": "2026-10-22T22:35:20.156Z",
+              "scope": "c892df9b48673fc1014f32c1d5b8ce12de8c4db54b2588c5f14b321b6d7e6d08",
+              "phase": "end",
+              "ms": 10.604,
+              "queue": {
+                "ms": 0.083,
+                "thread": 0.083,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Initialized",
+              "agent": "29d8e45b-0378-4e73-aa98-ac6a6f2fa7af"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-5",
+              "step": "29d8e45b-0378-4e73-aa98-ac6a6f2fa7af",
+              "method": "project.list_branches",
+              "args": {
+                "pageSize": 1000,
+                "pagePos": 0
+              },
+              "start": "2026-10-22T22:35:20.170Z",
+              "scope": "b731c5ecda5f9e9e0846697f41ef597dc589a4556426d05ce6dd49c016325f5c",
+              "phase": "end",
+              "ms": 0.264,
+              "queue": {
+                "ms": 0.111,
+                "thread": 0.111,
+                "connection": 0
+              },
+              "ok": true,
+              "agent": "29d8e45b-0378-4e73-aa98-ac6a6f2fa7af"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-6",
+              "step": "29d8e45b-0378-4e73-aa98-ac6a6f2fa7af",
+              "method": "operator.inspect.history",
+              "args": {},
+              "start": "2026-10-22T22:35:20.171Z",
+              "scope": "55bb2dcc25db4c55ec2ad517114cb2f8e83e4b6098bde284ec1dcd8edd55f5b1",
+              "phase": "end",
+              "ms": 0.346,
+              "queue": {
+                "ms": 0.114,
+                "thread": 0.114,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "29d8e45b-0378-4e73-aa98-ac6a6f2fa7af"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-7",
+              "step": "29d8e45b-0378-4e73-aa98-ac6a6f2fa7af",
+              "method": "operator.sandbox.list",
+              "args": {},
+              "start": "2026-10-22T22:35:20.171Z",
+              "scope": "2eb9efcce7dd8788e61be6e5a6ae2770cf8ab60f695b9de544a3c561011222ca",
+              "phase": "end",
+              "ms": 0.123,
+              "queue": {
+                "ms": 0.062,
+                "thread": 0.062,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "29d8e45b-0378-4e73-aa98-ac6a6f2fa7af"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-8",
+              "step": "29d8e45b-0378-4e73-aa98-ac6a6f2fa7af",
+              "method": "branch.fork",
+              "args": {
+                "name": "pi-work",
+                "from": "main"
+              },
+              "start": "2026-10-22T22:35:20.171Z",
+              "scope": "5a3a100314b63e5506fdac41f8e5aa20e5e2250fa1eee01d4b98d63626bdf2fe",
+              "phase": "end",
+              "ms": 0.419,
+              "queue": {
+                "ms": 0.111,
+                "thread": 0.111,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Forked",
+              "branch": "pi-work",
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "head": null,
+              "agent": "29d8e45b-0378-4e73-aa98-ac6a6f2fa7af"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-15",
+              "step": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "method": "project.list_branches",
+              "args": {
+                "pageSize": 1000,
+                "pagePos": 0
+              },
+              "start": "2026-10-22T22:35:20.349Z",
+              "scope": "b66e4ebc57e6060955c69d41ee29777191daeb9f4d9a861dd0e65b946bcc7ab4",
+              "phase": "end",
+              "ms": 0.25,
+              "queue": {
+                "ms": 0.121,
+                "thread": 0.121,
+                "connection": 0
+              },
+              "ok": true,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-16",
+              "step": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "method": "operator.inspect.history",
+              "args": {},
+              "start": "2026-10-22T22:35:20.350Z",
+              "scope": "d6afa059df985d2eeccf0185c0072c31a04b181497528acf72379547dd35f7dd",
+              "phase": "end",
+              "ms": 0.278,
+              "queue": {
+                "ms": 0.129,
+                "thread": 0.129,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-17",
+              "step": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "method": "operator.sandbox.list",
+              "args": {},
+              "start": "2026-10-22T22:35:20.350Z",
+              "scope": "f90b063bc4d4230ab35e6ee70a2831d1b4dce9e55075bd32f41d454614d44679",
+              "phase": "end",
+              "ms": 0.104,
+              "queue": {
+                "ms": 0.058,
+                "thread": 0.058,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-18",
+              "step": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "method": "branch.list_commits",
+              "args": {
+                "branch": "pi-work",
+                "pageSize": 1,
+                "pagePos": 0
+              },
+              "start": "2026-10-22T22:35:20.351Z",
+              "scope": "2b3e9a23b06e51620636f4fceef55f03b7f7ab767d004ef8bd2de246a8c78b28",
+              "phase": "end",
+              "ms": 0.215,
+              "queue": {
+                "ms": 0.124,
+                "thread": 0.124,
+                "connection": 0
+              },
+              "ok": true,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-19",
+              "step": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "method": "branch.list_commits",
+              "args": {
+                "branch": "pi-work",
+                "pageSize": 1,
+                "pagePos": 0
+              },
+              "start": "2026-10-22T22:35:20.352Z",
+              "scope": "53a8f28e391d97d914c47844a322a89fe4f94f359eec5cfbf7e892fa261e6f52",
+              "phase": "end",
+              "ms": 0.178,
+              "queue": {
+                "ms": 0.109,
+                "thread": 0.109,
+                "connection": 0
+              },
+              "ok": true,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708520365,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "ec15a9e2-b6c3-4292-ab07-c6dcd1571bc7",
+              "method": "layerfs_fs",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-20",
+              "step": "ec15a9e2-b6c3-4292-ab07-c6dcd1571bc7",
+              "method": "fs.mkdir",
+              "args": {
+                "branch": "pi-work",
+                "path": "/src",
+                "recursive": true
+              },
+              "start": "2026-10-22T22:35:20.366Z",
+              "scope": "d5a47d6e6f09d579a7cd5abdd47672a419395aa75f21d398235e613733d5abff",
+              "phase": "end",
+              "ms": 6.614,
+              "queue": {
+                "ms": 0.224,
+                "thread": 0.224,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Committed",
+              "commit": "12d35d625cff6d217c139e88409cccbd8bfac2a7d9a82ba15428d732186e599bc5",
+              "sizes": {
+                "logical": 0,
+                "newCanonical": 392,
+                "newStored": 274,
+                "newMetadata": 274
+              },
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708520372,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "ec15a9e2-b6c3-4292-ab07-c6dcd1571bc7",
+              "method": "layerfs_fs",
+              "phase": "end",
+              "ok": true,
+              "commit": {
+                "id": "12d35d625cff6d217c139e88409cccbd8bfac2a7d9a82ba15428d732186e599bc5",
+                "branch": "pi-work",
+                "parent": null,
+                "secondParent": null,
+                "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+                "root": "794d9c5057fd3cc6a26cdf7aa5c9d9b28ea3a91e2d22434024eb7324744b5366",
+                "via": "fs",
+                "message": "Apply filesystem changes",
+                "mergedFrom": null,
+                "time": 1792708520371,
+                "logical": 0,
+                "newCanonical": 392,
+                "newStored": 274,
+                "newMetadata": 274,
+                "displaced": null,
+                "lww": [],
+                "lwwTruncated": false
+              }
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-21",
+              "step": "ff4a377c-be05-4e36-8f1a-d612cb22cd54",
+              "method": "fs.apply",
+              "args": {
+                "branch": "pi-work",
+                "changes": 3,
+                "changeBytes": 5
+              },
+              "start": "2026-10-22T22:35:20.373Z",
+              "scope": "6c853cafa6462c226e59fa2972eb4153e2fc338ece56af40796ef20ced119397",
+              "phase": "end",
+              "ms": 4.084,
+              "queue": {
+                "ms": 0.284,
+                "thread": 0.284,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Committed",
+              "commit": "122f0a975d20a8020b97757d4eef1c10de5e8f789542cf12499f726e4525aecbb9",
+              "sizes": {
+                "logical": 10,
+                "newCanonical": 663,
+                "newStored": 377,
+                "newMetadata": 335
+              },
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708520373,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "ff4a377c-be05-4e36-8f1a-d612cb22cd54",
+              "method": "layerfs_fs",
+              "phase": "start"
+            },
+            {
+              "time": 1792708520377,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "ff4a377c-be05-4e36-8f1a-d612cb22cd54",
+              "method": "layerfs_fs",
+              "phase": "end",
+              "ok": true,
+              "commit": {
+                "id": "122f0a975d20a8020b97757d4eef1c10de5e8f789542cf12499f726e4525aecbb9",
+                "branch": "pi-work",
+                "parent": "12d35d625cff6d217c139e88409cccbd8bfac2a7d9a82ba15428d732186e599bc5",
+                "secondParent": null,
+                "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+                "root": "9b967a006af12976bce8645663564a49bd46c41bca53c2f25dfc6e709686812e",
+                "via": "fs",
+                "message": "Apply filesystem changes",
+                "mergedFrom": null,
+                "time": 1792708520377,
+                "logical": 10,
+                "newCanonical": 663,
+                "newStored": 377,
+                "newMetadata": 335,
+                "displaced": null,
+                "lww": [],
+                "lwwTruncated": false
+              }
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-22",
+              "step": "bb45b976-f329-413b-86c4-4ed292915523",
+              "method": "fs.write",
+              "args": {
+                "branch": "pi-work",
+                "path": "/binary.bin",
+                "bytesBytes": 2
+              },
+              "start": "2026-10-22T22:35:20.378Z",
+              "scope": "8e4cddbfff9260343123affef90cb26e1a5b9de1ea24d24480371d86f809b989",
+              "phase": "end",
+              "ms": 4.363,
+              "queue": {
+                "ms": 0.246,
+                "thread": 0.246,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Committed",
+              "commit": "120202a8fa2e1ba8756418a4967eeea3f6e160d95175500e12cf8f52b43a44c350",
+              "sizes": {
+                "logical": 12,
+                "newCanonical": 699,
+                "newStored": 367,
+                "newMetadata": 328
+              },
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708520378,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "bb45b976-f329-413b-86c4-4ed292915523",
+              "method": "layerfs_fs",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-23",
+              "step": "006667d2-c533-4b33-bb94-82a8644c2513",
+              "method": "fs.stat",
+              "args": {
+                "branch": "pi-work",
+                "path": "/binary.bin"
+              },
+              "start": "2026-10-22T22:35:20.383Z",
+              "scope": "221b52a6862762315d55817fd4b95026f2f0a0b9e4624628ba1c1d70363d9020",
+              "phase": "end",
+              "ms": 0.58,
+              "queue": {
+                "ms": 0.17,
+                "thread": 0.17,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708520383,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "bb45b976-f329-413b-86c4-4ed292915523",
+              "method": "layerfs_fs",
+              "phase": "end",
+              "ok": true,
+              "commit": {
+                "id": "120202a8fa2e1ba8756418a4967eeea3f6e160d95175500e12cf8f52b43a44c350",
+                "branch": "pi-work",
+                "parent": "122f0a975d20a8020b97757d4eef1c10de5e8f789542cf12499f726e4525aecbb9",
+                "secondParent": null,
+                "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+                "root": "4ee7956626b02f7cf1a2be1af1b8cf7be01533613e948663f38290a0dc55df3a",
+                "via": "fs",
+                "message": "Apply filesystem changes",
+                "mergedFrom": null,
+                "time": 1792708520381,
+                "logical": 12,
+                "newCanonical": 699,
+                "newStored": 367,
+                "newMetadata": 328,
+                "displaced": null,
+                "lww": [],
+                "lwwTruncated": false
+              }
+            },
+            {
+              "time": 1792708520383,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "006667d2-c533-4b33-bb94-82a8644c2513",
+              "method": "layerfs_fs",
+              "phase": "start"
+            },
+            {
+              "time": 1792708520384,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "006667d2-c533-4b33-bb94-82a8644c2513",
+              "method": "layerfs_fs",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708520384,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "e887bd98-556d-4059-8fd5-6c843d8bb8e5",
+              "method": "layerfs_workspace",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-24",
+              "step": "e887bd98-556d-4059-8fd5-6c843d8bb8e5",
+              "method": "workspace.mount",
+              "args": {
+                "branch": "pi-work"
+              },
+              "start": "2026-10-22T22:35:20.385Z",
+              "scope": "2b2246127e6c81593ab0032aeef7955a7658c525780b228bd74f7bb2906159e6",
+              "phase": "end",
+              "ms": 312.038,
+              "queue": {
+                "ms": 0.214,
+                "thread": 0.214,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Mounted",
+              "sandbox": "1",
+              "path": "/workspaces/1",
+              "image": "sha256:0ee21e3923293d06ed3dd3d653bd513d11eab506e370ef435ee12096cc3dc936",
+              "branch": "pi-work",
+              "base": "120202a8fa2e1ba8756418a4967eeea3f6e160d95175500e12cf8f52b43a44c350",
+              "baseLayer": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708520697,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "method": "workspace.mount",
+              "workspace": {
+                "sandbox": "1",
+                "path": "/workspaces/1",
+                "image": "sha256:0ee21e3923293d06ed3dd3d653bd513d11eab506e370ef435ee12096cc3dc936",
+                "branch": "pi-work"
+              }
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-25",
+              "step": "6757c581-36a0-4809-b8fb-d12bf4e225b3",
+              "method": "workspace.exec",
+              "args": {
+                "sandbox": "1",
+                "path": "/workspaces/1",
+                "command": "timeout --signal=TERM --kill-after=2s 5s bash -c 'bash -c '\\''printf retained > retained.txt'\\''; _pi_exit=$?; printf '\\''\\n__PI_LAYERFS_EXIT_c43289df-b3b8-402f-9226-1d1d6db8ae3e__:%s\\n'\\'' \"$_pi_exit…",
+                "message": "Pi retained Workspace command",
+                "spool": true
+              },
+              "start": "2026-10-22T22:35:20.698Z",
+              "scope": "1ffadacaa22bb6a80a74b9c8d8d51364a518fdba4a4c834d865c23f7be97746f",
+              "phase": "end",
+              "ms": 23.843,
+              "queue": {
+                "ms": 0.1,
+                "thread": 0.1,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "exit:0",
+              "exitCode": 0,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708520698,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "e887bd98-556d-4059-8fd5-6c843d8bb8e5",
+              "method": "layerfs_workspace",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708520698,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "6757c581-36a0-4809-b8fb-d12bf4e225b3",
+              "method": "layerfs_workspace",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-26",
+              "step": "e6cd2d4b-2bfb-455f-9df4-18d4eff1f63e",
+              "method": "operator.process.start",
+              "args": {
+                "sandbox": "1",
+                "path": "/workspaces/1",
+                "command": "sleep 30",
+                "background": true
+              },
+              "start": "2026-10-22T22:35:20.723Z",
+              "scope": "c49c4f2d12973620582465736a24eb1a01cc10d7f3e978333da097c1a007554b",
+              "phase": "end",
+              "ms": 17.334,
+              "queue": {
+                "ms": 0.099,
+                "thread": 0.099,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "running",
+              "process": "proc_1_bea5040a29f69ca55ad7c190",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708520723,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "method": "workspace.exec",
+              "workspace": {
+                "sandbox": "1",
+                "path": "/workspaces/1",
+                "image": "sha256:0ee21e3923293d06ed3dd3d653bd513d11eab506e370ef435ee12096cc3dc936",
+                "branch": "pi-work"
+              },
+              "command": {
+                "kind": "exit:0",
+                "exitCode": 0,
+                "stdout": "",
+                "stderr": "",
+                "message": "Pi retained Workspace command",
+                "truncated": false,
+                "stdoutBytes": 0,
+                "stderrBytes": 0,
+                "timedOut": false,
+                "cancelled": false,
+                "stdoutTruncated": false,
+                "stderrTruncated": false
+              }
+            },
+            {
+              "time": 1792708520723,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "6757c581-36a0-4809-b8fb-d12bf4e225b3",
+              "method": "layerfs_workspace",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708520723,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "e6cd2d4b-2bfb-455f-9df4-18d4eff1f63e",
+              "method": "layerfs_process",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-27",
+              "step": "14125839-3e67-4cf8-8bf4-caf2e49db373",
+              "method": "operator.process.list",
+              "args": {},
+              "start": "2026-10-22T22:35:20.741Z",
+              "scope": "3aacf88156860ec3c271ecf773b3ec94afb334bef7472b631f84ae8a7c21b582",
+              "phase": "end",
+              "ms": 20.536,
+              "queue": {
+                "ms": 0.208,
+                "thread": 0.208,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708520741,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "method": "process.start",
+              "workspace": {
+                "sandbox": "1",
+                "path": "/workspaces/1",
+                "image": "sha256:0ee21e3923293d06ed3dd3d653bd513d11eab506e370ef435ee12096cc3dc936",
+                "branch": "pi-work"
+              },
+              "process": "proc_1_bea5040a29f69ca55ad7c190"
+            },
+            {
+              "time": 1792708520741,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "e6cd2d4b-2bfb-455f-9df4-18d4eff1f63e",
+              "method": "layerfs_process",
+              "phase": "end",
+              "ok": true,
+              "command": "sleep 30"
+            },
+            {
+              "time": 1792708520741,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "14125839-3e67-4cf8-8bf4-caf2e49db373",
+              "method": "layerfs_process",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-28",
+              "step": "3f1d47a7-b96e-4d57-bf6f-91bfee4b6641",
+              "method": "workspace.unmount",
+              "args": {
+                "sandbox": "1",
+                "path": "/workspaces/1",
+                "discard": false
+              },
+              "start": "2026-10-22T22:35:20.762Z",
+              "scope": "a3ae61d0eace5f46ea4f2b3247f7f5f8d09ea2e2b02f4c1c18218dec8042dd42",
+              "phase": "end",
+              "ms": 19.806,
+              "queue": {
+                "ms": 0.185,
+                "thread": 0.185,
+                "connection": 0
+              },
+              "ok": false,
+              "code": "Busy",
+              "message": "1:/workspaces/1 is busy: proc_1_bea5040a29f69ca55ad7c190 still running",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708520762,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "14125839-3e67-4cf8-8bf4-caf2e49db373",
+              "method": "layerfs_process",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708520762,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "3f1d47a7-b96e-4d57-bf6f-91bfee4b6641",
+              "method": "layerfs_workspace",
+              "phase": "start"
+            },
+            {
+              "time": 1792708520782,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "3f1d47a7-b96e-4d57-bf6f-91bfee4b6641",
+              "method": "layerfs_workspace",
+              "phase": "end",
+              "ok": false,
+              "error": {
+                "code": "Busy",
+                "message": "Busy: 1:/workspaces/1 is busy: proc_1_bea5040a29f69ca55ad7c190 still running"
+              }
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-29",
+              "step": "cc31ff51-4ebf-4d9d-8e72-74f519430e01",
+              "method": "operator.process.cancel",
+              "args": {
+                "process": "proc_1_bea5040a29f69ca55ad7c190"
+              },
+              "start": "2026-10-22T22:35:20.783Z",
+              "scope": "de3498dbb6b24f434dd447499060dad0a316c8c5bf31e5d6da6930f9564c3367",
+              "phase": "end",
+              "ms": 37.982,
+              "queue": {
+                "ms": 0.196,
+                "thread": 0.196,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Stopped",
+              "process": "proc_1_bea5040a29f69ca55ad7c190",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708520783,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "cc31ff51-4ebf-4d9d-8e72-74f519430e01",
+              "method": "layerfs_process",
+              "phase": "start"
+            },
+            {
+              "time": 1792708520821,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "cc31ff51-4ebf-4d9d-8e72-74f519430e01",
+              "method": "layerfs_process",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708520821,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "9e3cd9fe-71f4-492b-8356-0feb5ea69771",
+              "method": "layerfs_workspace",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-30",
+              "step": "9e3cd9fe-71f4-492b-8356-0feb5ea69771",
+              "method": "workspace.status",
+              "args": {
+                "sandbox": "1",
+                "path": "/workspaces/1"
+              },
+              "start": "2026-10-22T22:35:20.822Z",
+              "scope": "e2c4d8de67a89aa18ad026eb49835a66a7a35f55832613926e7547b72f3a5014",
+              "phase": "end",
+              "ms": 1.529,
+              "queue": {
+                "ms": 0.141,
+                "thread": 0.141,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708520823,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "9e3cd9fe-71f4-492b-8356-0feb5ea69771",
+              "method": "layerfs_workspace",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708520823,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "5285528a-0962-44d2-9fd6-a204c305afbe",
+              "method": "layerfs_workspace",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-31",
+              "step": "5285528a-0962-44d2-9fd6-a204c305afbe",
+              "method": "operator.workspace.overlay",
+              "args": {
+                "sandbox": "1",
+                "path": "/workspaces/1"
+              },
+              "start": "2026-10-22T22:35:20.824Z",
+              "scope": "b2b412c25662170d7003f1c8ce1b0e796c4b909a24ff5dcbe8a3a8913bc9bda7",
+              "phase": "end",
+              "ms": 2.785,
+              "queue": {
+                "ms": 0.147,
+                "thread": 0.147,
+                "connection": 0
+              },
+              "ok": true,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708520826,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "5285528a-0962-44d2-9fd6-a204c305afbe",
+              "method": "layerfs_workspace",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-32",
+              "step": "10fdd27c-ba3f-4d6c-9124-35f52baa4e15",
+              "method": "operator.workspace.changes",
+              "args": {
+                "sandbox": "1",
+                "path": "/workspaces/1",
+                "pageSize": 100,
+                "pagePos": 0
+              },
+              "start": "2026-10-22T22:35:20.827Z",
+              "scope": "9328b5d21901a702a6107fd98f464803000fc852f4f6ea6a27448cfd9ed4f378",
+              "phase": "end",
+              "ms": 2.483,
+              "queue": {
+                "ms": 0.104,
+                "thread": 0.104,
+                "connection": 0
+              },
+              "ok": true,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708520827,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "10fdd27c-ba3f-4d6c-9124-35f52baa4e15",
+              "method": "layerfs_workspace",
+              "phase": "start"
+            },
+            {
+              "time": 1792708520829,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "10fdd27c-ba3f-4d6c-9124-35f52baa4e15",
+              "method": "layerfs_workspace",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708520829,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "a930bc8e-0118-4258-ad26-641f649b2459",
+              "method": "layerfs_workspace",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-33",
+              "step": "a930bc8e-0118-4258-ad26-641f649b2459",
+              "method": "workspace.commit",
+              "args": {
+                "sandbox": "1",
+                "path": "/workspaces/1",
+                "message": "retained work",
+                "force": false
+              },
+              "start": "2026-10-22T22:35:20.830Z",
+              "scope": "2875098c0548af0288f4f7027c995dd32cdd8d674bfef42c9551cc458686752e",
+              "phase": "end",
+              "ms": 4.418,
+              "queue": {
+                "ms": 0.216,
+                "thread": 0.216,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Committed",
+              "commit": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+              "sizes": {
+                "logical": 20,
+                "newCanonical": 808,
+                "newStored": 401,
+                "newMetadata": 356
+              },
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-34",
+              "step": "47718d54-67ce-4b51-8475-70996742ab02",
+              "method": "workspace.unmount",
+              "args": {
+                "sandbox": "1",
+                "path": "/workspaces/1",
+                "discard": false
+              },
+              "start": "2026-10-22T22:35:20.834Z",
+              "scope": "e2c2c96b07119005050463c898b08faccd101314905503125a7921b0fbac3d02",
+              "phase": "end",
+              "ms": 2.602,
+              "queue": {
+                "ms": 0.163,
+                "thread": 0.163,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Unmounted",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708520834,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "a930bc8e-0118-4258-ad26-641f649b2459",
+              "method": "layerfs_workspace",
+              "phase": "end",
+              "ok": true,
+              "commit": {
+                "id": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+                "branch": null,
+                "parent": "120202a8fa2e1ba8756418a4967eeea3f6e160d95175500e12cf8f52b43a44c350",
+                "secondParent": null,
+                "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+                "root": "d1f5a161134f549e04f1fb31eb86fab46285e535cc958d80aaadfcebbc581046",
+                "via": "exec",
+                "message": "retained work",
+                "mergedFrom": null,
+                "time": 1792708520832,
+                "logical": 20,
+                "newCanonical": 808,
+                "newStored": 401,
+                "newMetadata": 356,
+                "displaced": null,
+                "lww": [],
+                "lwwTruncated": false
+              }
+            },
+            {
+              "time": 1792708520834,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "47718d54-67ce-4b51-8475-70996742ab02",
+              "method": "layerfs_workspace",
+              "phase": "start"
+            },
+            {
+              "time": 1792708520837,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "47718d54-67ce-4b51-8475-70996742ab02",
+              "method": "layerfs_workspace",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708520837,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "5bd29751-b338-4023-b568-3b88ffdc046a",
+              "method": "layerfs_agent",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-35",
+              "step": "5bd29751-b338-4023-b568-3b88ffdc046a",
+              "method": "branch.fork",
+              "args": {
+                "name": "agent-79b5bd1e-a26",
+                "from": "pi-work"
+              },
+              "start": "2026-10-22T22:35:20.838Z",
+              "scope": "8c1952bd692518a69524bec070d812a52b961309a6a73a0b78d9b5089e268c29",
+              "phase": "end",
+              "ms": 0.355,
+              "queue": {
+                "ms": 0.083,
+                "thread": 0.083,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Forked",
+              "branch": "agent-79b5bd1e-a26",
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "head": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-36",
+              "step": "79b5bd1e-a269-47e3-9ed8-aad52f27e074",
+              "method": "project.list_branches",
+              "args": {
+                "pageSize": 1000,
+                "pagePos": 0
+              },
+              "start": "2026-10-22T22:35:20.843Z",
+              "scope": "605eee916cda67fd0abd9e0c656881c89372a9532dda9713e5857345f3b9c5f8",
+              "phase": "end",
+              "ms": 0.181,
+              "queue": {
+                "ms": 0.085,
+                "thread": 0.085,
+                "connection": 0
+              },
+              "ok": true,
+              "agent": "79b5bd1e-a269-47e3-9ed8-aad52f27e074"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-37",
+              "step": "79b5bd1e-a269-47e3-9ed8-aad52f27e074",
+              "method": "operator.inspect.history",
+              "args": {},
+              "start": "2026-10-22T22:35:20.844Z",
+              "scope": "8ca7d6bdbcdd6adfa22a5a61441cf380259e55ddfffb9670c71f30f24d2b2118",
+              "phase": "end",
+              "ms": 0.298,
+              "queue": {
+                "ms": 0.109,
+                "thread": 0.109,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "79b5bd1e-a269-47e3-9ed8-aad52f27e074"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-38",
+              "step": "79b5bd1e-a269-47e3-9ed8-aad52f27e074",
+              "method": "operator.sandbox.list",
+              "args": {},
+              "start": "2026-10-22T22:35:20.844Z",
+              "scope": "21bd86d93539f965e1096b1ef7627538ccabd94bfba204bdf2294fa8141d0d3d",
+              "phase": "end",
+              "ms": 0.489,
+              "queue": {
+                "ms": 0.049,
+                "thread": 0.049,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "79b5bd1e-a269-47e3-9ed8-aad52f27e074"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-39",
+              "step": "79b5bd1e-a269-47e3-9ed8-aad52f27e074",
+              "method": "operator.inspect.snapshot",
+              "args": {
+                "sandbox": "1"
+              },
+              "start": "2026-10-22T22:35:20.845Z",
+              "scope": "9a9f8998ea9163ca0df94e701baedfe1857b9abd84dbed51cfbf487fed5d5361",
+              "phase": "end",
+              "ms": 1.633,
+              "queue": {
+                "ms": 0.109,
+                "thread": 0.109,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "79b5bd1e-a269-47e3-9ed8-aad52f27e074"
+            },
+            {
+              "time": 1792708520854,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "5bd29751-b338-4023-b568-3b88ffdc046a",
+              "method": "layerfs_agent",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708520942,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "e39fcd61-1a41-45f1-9ef5-a5eec7533768",
+              "method": "layerfs_agent",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-40",
+              "step": "e39fcd61-1a41-45f1-9ef5-a5eec7533768",
+              "method": "branch.fork",
+              "args": {
+                "name": "agent-2d8cef85-2d9",
+                "from": "pi-work"
+              },
+              "start": "2026-10-22T22:35:20.953Z",
+              "scope": "e0fc85f62cfb3fdbdf229e5b75c7609cb329eaa7c2f89b9a8e80b7038f7bbeef",
+              "phase": "end",
+              "ms": 0.361,
+              "queue": {
+                "ms": 0.113,
+                "thread": 0.113,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Forked",
+              "branch": "agent-2d8cef85-2d9",
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "head": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708520953,
+              "agent": "79b5bd1e-a269-47e3-9ed8-aad52f27e074",
+              "label": "Alpha",
+              "branch": "agent-79b5bd1e-a26",
+              "id": "write-1",
+              "method": "write",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-41",
+              "step": "write-1",
+              "method": "fs.write",
+              "args": {
+                "branch": "agent-79b5bd1e-a26",
+                "path": "/alpha.txt",
+                "contentBytes": 6
+              },
+              "start": "2026-10-22T22:35:20.954Z",
+              "scope": "ee91ea602d07411cd28faa046484b5fc0dfdac21d4a11b8739c707a0ece973d6",
+              "phase": "end",
+              "ms": 5.42,
+              "queue": {
+                "ms": 0.16,
+                "thread": 0.16,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Committed",
+              "commit": "12ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552",
+              "sizes": {
+                "logical": 26,
+                "newCanonical": 906,
+                "newStored": 409,
+                "newMetadata": 366
+              },
+              "agent": "79b5bd1e-a269-47e3-9ed8-aad52f27e074"
+            },
+            {
+              "time": 1792708520959,
+              "agent": "79b5bd1e-a269-47e3-9ed8-aad52f27e074",
+              "label": "Alpha",
+              "branch": "agent-79b5bd1e-a26",
+              "id": "write-1",
+              "method": "write",
+              "phase": "end",
+              "ok": true,
+              "commit": {
+                "id": "12ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552",
+                "branch": "agent-79b5bd1e-a26",
+                "parent": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+                "secondParent": null,
+                "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+                "root": "947531c9299412f73c15b36d3a2cc3212a9e01202a0e2a2a9b6c38846edaafde",
+                "via": "fs",
+                "message": "Apply filesystem changes",
+                "mergedFrom": null,
+                "time": 1792708520958,
+                "logical": 26,
+                "newCanonical": 906,
+                "newStored": 409,
+                "newMetadata": 366,
+                "displaced": null,
+                "lww": [],
+                "lwwTruncated": false
+              }
+            },
+            {
+              "time": 1792708520964,
+              "agent": "79b5bd1e-a269-47e3-9ed8-aad52f27e074",
+              "label": "Alpha",
+              "branch": "agent-79b5bd1e-a26",
+              "method": "agent.text",
+              "text": "Completed owned Branch write."
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-42",
+              "step": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4",
+              "method": "project.list_branches",
+              "args": {
+                "pageSize": 1000,
+                "pagePos": 0
+              },
+              "start": "2026-10-22T22:35:20.966Z",
+              "scope": "10784df0cf5dbcd57573866686f4cad0933d1e87b4fa51ac18913c81c228376f",
+              "phase": "end",
+              "ms": 0.245,
+              "queue": {
+                "ms": 0.106,
+                "thread": 0.106,
+                "connection": 0
+              },
+              "ok": true,
+              "agent": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-43",
+              "step": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4",
+              "method": "operator.inspect.history",
+              "args": {},
+              "start": "2026-10-22T22:35:20.966Z",
+              "scope": "b290ad1120ce003f2b7ba6493d8ff869ec38f0529760afff2190759fb46cfb34",
+              "phase": "end",
+              "ms": 0.394,
+              "queue": {
+                "ms": 0.124,
+                "thread": 0.124,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-44",
+              "step": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4",
+              "method": "operator.sandbox.list",
+              "args": {},
+              "start": "2026-10-22T22:35:20.966Z",
+              "scope": "e2f70add68e6b1f3ebe8d7e56c414b7b1b25ff242102b5212ac741904ef45887",
+              "phase": "end",
+              "ms": 0.485,
+              "queue": {
+                "ms": 0.047,
+                "thread": 0.047,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4"
+            },
+            {
+              "time": 1792708520966,
+              "agent": "79b5bd1e-a269-47e3-9ed8-aad52f27e074",
+              "label": "Alpha",
+              "branch": "agent-79b5bd1e-a26",
+              "method": "agent.end",
+              "state": "completed",
+              "result": "Completed owned Branch write."
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-45",
+              "step": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4",
+              "method": "operator.inspect.snapshot",
+              "args": {
+                "sandbox": "1"
+              },
+              "start": "2026-10-22T22:35:20.967Z",
+              "scope": "5d173e20c03f8e682237fd763a01f36c588d0a617dd4da22a6ad64c146d9bb95",
+              "phase": "end",
+              "ms": 2.236,
+              "queue": {
+                "ms": 0.139,
+                "thread": 0.139,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4"
+            },
+            {
+              "time": 1792708520976,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "e39fcd61-1a41-45f1-9ef5-a5eec7533768",
+              "method": "layerfs_agent",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-46",
+              "step": "write-3",
+              "method": "fs.write",
+              "args": {
+                "branch": "agent-2d8cef85-2d9",
+                "path": "/beta.txt",
+                "contentBytes": 5
+              },
+              "start": "2026-10-22T22:35:20.979Z",
+              "scope": "0114927e15a500338aa04c5dba1bfd2703233d8556e92fc1d364a16539a4456a",
+              "phase": "end",
+              "ms": 3.466,
+              "queue": {
+                "ms": 0.166,
+                "thread": 0.166,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Committed",
+              "commit": "12edbc3bf320c839f21fa2bc2acad95f94ee8f8dd6ef9b8c4f8422e17175052acc",
+              "sizes": {
+                "logical": 25,
+                "newCanonical": 904,
+                "newStored": 408,
+                "newMetadata": 366
+              },
+              "agent": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4"
+            },
+            {
+              "time": 1792708520979,
+              "agent": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4",
+              "label": "Beta",
+              "branch": "agent-2d8cef85-2d9",
+              "id": "write-3",
+              "method": "write",
+              "phase": "start"
+            },
+            {
+              "time": 1792708520979,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "8abdf7ca-1345-4207-82c2-87adacdb72e3",
+              "method": "layerfs_agent",
+              "phase": "start"
+            },
+            {
+              "time": 1792708520980,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "8abdf7ca-1345-4207-82c2-87adacdb72e3",
+              "method": "layerfs_agent",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708520983,
+              "agent": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4",
+              "label": "Beta",
+              "branch": "agent-2d8cef85-2d9",
+              "id": "write-3",
+              "method": "write",
+              "phase": "end",
+              "ok": true,
+              "commit": {
+                "id": "12edbc3bf320c839f21fa2bc2acad95f94ee8f8dd6ef9b8c4f8422e17175052acc",
+                "branch": "agent-2d8cef85-2d9",
+                "parent": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+                "secondParent": null,
+                "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+                "root": "3797084ea63c5d64ae6474a36478c5fa75855db795533629ea110b9b16f65a56",
+                "via": "fs",
+                "message": "Apply filesystem changes",
+                "mergedFrom": null,
+                "time": 1792708520982,
+                "logical": 25,
+                "newCanonical": 904,
+                "newStored": 408,
+                "newMetadata": 366,
+                "displaced": null,
+                "lww": [],
+                "lwwTruncated": false
+              }
+            },
+            {
+              "time": 1792708520986,
+              "agent": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4",
+              "label": "Beta",
+              "branch": "agent-2d8cef85-2d9",
+              "method": "agent.text",
+              "text": "Completed owned Branch write."
+            },
+            {
+              "time": 1792708520987,
+              "agent": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4",
+              "label": "Beta",
+              "branch": "agent-2d8cef85-2d9",
+              "method": "agent.end",
+              "state": "completed",
+              "result": "Completed owned Branch write."
+            },
+            {
+              "time": 1792708521080,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "8e08cb72-e3ed-4484-9a2c-d2e3d0ddb364",
+              "method": "layerfs_agent",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-47",
+              "step": "544056f0-1513-4e87-8714-5139b8752757",
+              "method": "branch.merge",
+              "args": {
+                "branch": "pi-work",
+                "with": "agent-79b5bd1e-a26",
+                "name": "joined-alpha",
+                "message": "integrate Alpha"
+              },
+              "start": "2026-10-22T22:35:21.081Z",
+              "scope": "99b31977be4304e47de79d4c466e73d2f9a3fefb881824d9beb8c6df306cecd6",
+              "phase": "end",
+              "ms": 0.593,
+              "queue": {
+                "ms": 0.133,
+                "thread": 0.133,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Merged",
+              "commit": "12ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552",
+              "branch": "joined-alpha",
+              "head": "12ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708521081,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "8e08cb72-e3ed-4484-9a2c-d2e3d0ddb364",
+              "method": "layerfs_agent",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708521081,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "544056f0-1513-4e87-8714-5139b8752757",
+              "method": "layerfs_branch",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-48",
+              "step": "a11c746f-6c93-4b07-87c9-fcb52beb1a3f",
+              "method": "branch.merge",
+              "args": {
+                "branch": "joined-alpha",
+                "with": "agent-2d8cef85-2d9",
+                "name": "joined",
+                "message": "integrate Beta"
+              },
+              "start": "2026-10-22T22:35:21.082Z",
+              "scope": "b7bab5ea81f45281e91fe6173d29263201c6718619d35ecf5f9a7da9fc1c6b32",
+              "phase": "end",
+              "ms": 2.539,
+              "queue": {
+                "ms": 0.177,
+                "thread": 0.177,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Merged",
+              "commit": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+              "branch": "joined",
+              "head": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708521082,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "544056f0-1513-4e87-8714-5139b8752757",
+              "method": "layerfs_branch",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708521082,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "a11c746f-6c93-4b07-87c9-fcb52beb1a3f",
+              "method": "layerfs_branch",
+              "phase": "start"
+            },
+            {
+              "time": 1792708521085,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "a11c746f-6c93-4b07-87c9-fcb52beb1a3f",
+              "method": "layerfs_branch",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-49",
+              "step": "3a40cc23-c10d-4918-bb8d-a10e34a40967",
+              "method": "branch.diff_branches",
+              "args": {
+                "from": "pi-work",
+                "to": "joined",
+                "pageSize": 1,
+                "pagePos": 0,
+                "hunks": false
+              },
+              "start": "2026-10-22T22:35:21.086Z",
+              "scope": "ebdc0f5fb86e2ad0aeab85f674b2a94be9343dfef9cabf831987fae074dcb4d4",
+              "phase": "end",
+              "ms": 1.292,
+              "queue": {
+                "ms": 0.193,
+                "thread": 0.193,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708521086,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "3a40cc23-c10d-4918-bb8d-a10e34a40967",
+              "method": "layerfs_branch",
+              "phase": "start"
+            },
+            {
+              "time": 1792708521087,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "3a40cc23-c10d-4918-bb8d-a10e34a40967",
+              "method": "layerfs_branch",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-50",
+              "step": "6921c52d-7e14-41f7-9581-40832a6d3094",
+              "method": "branch.publish",
+              "args": {
+                "branch": "joined"
+              },
+              "start": "2026-10-22T22:35:21.088Z",
+              "scope": "eef1466f84eb3a11b63090084a00976d820d3bb1f8577d029155b275fb8edb97",
+              "phase": "end",
+              "ms": 0.815,
+              "queue": {
+                "ms": 0.154,
+                "thread": 0.154,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Added",
+              "commit": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+              "layer": "322eeeeca40b4d8176293015fd1265661b95d5f8833002b2e46dd3549c3792e436",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708521088,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "6921c52d-7e14-41f7-9581-40832a6d3094",
+              "method": "layerfs_branch",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-51",
+              "step": "d47c1da8-77c5-47e9-9d02-60e0a01c6cb7",
+              "method": "fs.read",
+              "args": {
+                "branch": "main",
+                "path": "/alpha.txt",
+                "startLine": 1,
+                "endLine": 200
+              },
+              "start": "2026-10-22T22:35:21.089Z",
+              "scope": "d3e38f04b10bbbc135e14a386fe99da82d070409b9215e1798446dddc49ddd98",
+              "phase": "end",
+              "ms": 0.626,
+              "queue": {
+                "ms": 0.193,
+                "thread": 0.193,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708521089,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "6921c52d-7e14-41f7-9581-40832a6d3094",
+              "method": "layerfs_branch",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708521089,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "d47c1da8-77c5-47e9-9d02-60e0a01c6cb7",
+              "method": "layerfs_fs",
+              "phase": "start"
+            },
+            {
+              "time": 1792708521090,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "d47c1da8-77c5-47e9-9d02-60e0a01c6cb7",
+              "method": "layerfs_fs",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708521090,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "9c6cd6f4-98fd-491b-8df8-cd7066ed45a2",
+              "method": "layerfs_fs",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-52",
+              "step": "9c6cd6f4-98fd-491b-8df8-cd7066ed45a2",
+              "method": "fs.read",
+              "args": {
+                "branch": "main",
+                "path": "/beta.txt",
+                "startLine": 1,
+                "endLine": 200
+              },
+              "start": "2026-10-22T22:35:21.091Z",
+              "scope": "4100b31aed0b89533504740e4fae40f94414aa991f4f2baf70f205efbedc6e13",
+              "phase": "end",
+              "ms": 0.668,
+              "queue": {
+                "ms": 0.201,
+                "thread": 0.201,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708521091,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "9c6cd6f4-98fd-491b-8df8-cd7066ed45a2",
+              "method": "layerfs_fs",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-53",
+              "step": "1f030a3b-4cb8-403a-93ed-b1cc01557750",
+              "method": "fs.read",
+              "args": {
+                "branch": "main",
+                "path": "/retained.txt",
+                "startLine": 1,
+                "endLine": 200
+              },
+              "start": "2026-10-22T22:35:21.092Z",
+              "scope": "b6b520cbc030d180e33957aea078034a1fb1c05ed7db3d6ae92a7a73eb728159",
+              "phase": "end",
+              "ms": 0.622,
+              "queue": {
+                "ms": 0.191,
+                "thread": 0.191,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708521092,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "1f030a3b-4cb8-403a-93ed-b1cc01557750",
+              "method": "layerfs_fs",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-54",
+              "step": "6051c664-fd73-450c-8165-61da9ed5e61e",
+              "method": "fs.blame",
+              "args": {
+                "branch": "joined",
+                "path": "/alpha.txt",
+                "fromLine": 1
+              },
+              "start": "2026-10-22T22:35:21.093Z",
+              "scope": "7176d05fee2a24370a288570c629bae6e63c5683d4269399a37d08746f8251ea",
+              "phase": "end",
+              "ms": 1.831,
+              "queue": {
+                "ms": 0.209,
+                "thread": 0.209,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708521093,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "1f030a3b-4cb8-403a-93ed-b1cc01557750",
+              "method": "layerfs_fs",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708521093,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "6051c664-fd73-450c-8165-61da9ed5e61e",
+              "method": "layerfs_fs",
+              "phase": "start"
+            },
+            {
+              "time": 1792708521095,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "6051c664-fd73-450c-8165-61da9ed5e61e",
+              "method": "layerfs_fs",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-55",
+              "step": "6bc1ea48-c2be-457a-b186-baed48013e74",
+              "method": "operator.files.history",
+              "args": {
+                "branch": "joined",
+                "path": "/alpha.txt",
+                "pageSize": 100,
+                "pagePos": 0
+              },
+              "start": "2026-10-22T22:35:21.096Z",
+              "scope": "47537340b522c65ae85470b17c272a54a4c52e776e5c9fe339033024d44495b3",
+              "phase": "end",
+              "ms": 5.331,
+              "queue": {
+                "ms": 0.208,
+                "thread": 0.208,
+                "connection": 0
+              },
+              "ok": true,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708521096,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "6bc1ea48-c2be-457a-b186-baed48013e74",
+              "method": "layerfs_inspect",
+              "phase": "start"
+            },
+            {
+              "time": 1792708521101,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "6bc1ea48-c2be-457a-b186-baed48013e74",
+              "method": "layerfs_inspect",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-56",
+              "step": "fe80431e-bd34-4cfe-8d4b-ae1218b9d707",
+              "method": "operator.files.stats",
+              "args": {
+                "branch": "joined",
+                "path": "/alpha.txt"
+              },
+              "start": "2026-10-22T22:35:21.102Z",
+              "scope": "e1c0943c43195ade2b3982e3d14ccca22eb14c3af9ef5dfa38ae09c11306c327",
+              "phase": "end",
+              "ms": 4.79,
+              "queue": {
+                "ms": 0.174,
+                "thread": 0.174,
+                "connection": 0
+              },
+              "ok": true,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708521102,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "fe80431e-bd34-4cfe-8d4b-ae1218b9d707",
+              "method": "layerfs_inspect",
+              "phase": "start"
+            },
+            {
+              "time": 1792708521107,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "fe80431e-bd34-4cfe-8d4b-ae1218b9d707",
+              "method": "layerfs_inspect",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708521107,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "069e9d08-5656-414e-b32c-ef2ecb0b3194",
+              "method": "layerfs_branch",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-57",
+              "step": "069e9d08-5656-414e-b32c-ef2ecb0b3194",
+              "method": "branch.fork",
+              "args": {
+                "name": "conflict-a",
+                "from": "joined"
+              },
+              "start": "2026-10-22T22:35:21.108Z",
+              "scope": "2ae5ff871b1441e10f730bff530aa19aac7464bfdbfc403081077c390aa7c141",
+              "phase": "end",
+              "ms": 0.352,
+              "queue": {
+                "ms": 0.171,
+                "thread": 0.171,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Forked",
+              "branch": "conflict-a",
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "head": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-58",
+              "step": "1fe3a3a9-5b62-4573-91ea-d0e303f58b51",
+              "method": "branch.fork",
+              "args": {
+                "name": "conflict-b",
+                "from": "joined"
+              },
+              "start": "2026-10-22T22:35:21.108Z",
+              "scope": "19323ed70f1577925913c7d6eb9e85446602e6af811153bcc602cf1addec0161",
+              "phase": "end",
+              "ms": 0.35,
+              "queue": {
+                "ms": 0.162,
+                "thread": 0.162,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Forked",
+              "branch": "conflict-b",
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "head": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708521108,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "069e9d08-5656-414e-b32c-ef2ecb0b3194",
+              "method": "layerfs_branch",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708521108,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "1fe3a3a9-5b62-4573-91ea-d0e303f58b51",
+              "method": "layerfs_branch",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-59",
+              "step": "3ce12f92-8697-492e-8844-65cfed74ffaf",
+              "method": "fs.write",
+              "args": {
+                "branch": "conflict-a",
+                "path": "/conflict.txt",
+                "contentBytes": 2
+              },
+              "start": "2026-10-22T22:35:21.109Z",
+              "scope": "f3365a4c615b46c4e3f248917d300c8ed2721ab668d7daa6017d870f94d7f9ee",
+              "phase": "end",
+              "ms": 6.568,
+              "queue": {
+                "ms": 0.236,
+                "thread": 0.236,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Committed",
+              "commit": "12df97bd2d4d8b0bb34d4ed64ea19bb4cd1bce32c5c4bdae8315aab603e29482eb",
+              "sizes": {
+                "logical": 33,
+                "newCanonical": 1104,
+                "newStored": 465,
+                "newMetadata": 426
+              },
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708521109,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "1fe3a3a9-5b62-4573-91ea-d0e303f58b51",
+              "method": "layerfs_branch",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708521109,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "3ce12f92-8697-492e-8844-65cfed74ffaf",
+              "method": "layerfs_fs",
+              "phase": "start"
+            },
+            {
+              "time": 1792708521116,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "3ce12f92-8697-492e-8844-65cfed74ffaf",
+              "method": "layerfs_fs",
+              "phase": "end",
+              "ok": true,
+              "commit": {
+                "id": "12df97bd2d4d8b0bb34d4ed64ea19bb4cd1bce32c5c4bdae8315aab603e29482eb",
+                "branch": "conflict-a",
+                "parent": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+                "secondParent": null,
+                "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+                "root": "b5b9cfa3b6af63071256cb3a0eb16185083ff87c5369f5c8a13eb5bc5298473b",
+                "via": "fs",
+                "message": "Apply filesystem changes",
+                "mergedFrom": null,
+                "time": 1792708521114,
+                "logical": 33,
+                "newCanonical": 1104,
+                "newStored": 465,
+                "newMetadata": 426,
+                "displaced": null,
+                "lww": [],
+                "lwwTruncated": false
+              }
+            },
+            {
+              "time": 1792708521116,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "ce1d9ae1-d011-485e-ada6-60347426b327",
+              "method": "layerfs_fs",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-60",
+              "step": "ce1d9ae1-d011-485e-ada6-60347426b327",
+              "method": "fs.write",
+              "args": {
+                "branch": "conflict-b",
+                "path": "/conflict.txt",
+                "contentBytes": 2
+              },
+              "start": "2026-10-22T22:35:21.117Z",
+              "scope": "e27c52af698984b4b6d21902d60df27bb580ca3bce80077239c40cd90e520750",
+              "phase": "end",
+              "ms": 6.002,
+              "queue": {
+                "ms": 0.242,
+                "thread": 0.242,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Committed",
+              "commit": "12c70d21d2534bf6c1617cf076fe0184771b3e1c87b6b114e55a12994a661a1515",
+              "sizes": {
+                "logical": 33,
+                "newCanonical": 1104,
+                "newStored": 464,
+                "newMetadata": 425
+              },
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-61",
+              "step": "a6d04bb2-31fa-4f55-97bd-f30fc2e79553",
+              "method": "branch.merge",
+              "args": {
+                "branch": "conflict-a",
+                "with": "conflict-b",
+                "name": "must-conflict"
+              },
+              "start": "2026-10-22T22:35:21.123Z",
+              "scope": "dd55693145303e2a3b2c4a4612120d5920c163cdfe7a6b2a54c99192e59ab427",
+              "phase": "end",
+              "ms": 1.532,
+              "queue": {
+                "ms": 0.276,
+                "thread": 0.276,
+                "connection": 0
+              },
+              "ok": false,
+              "code": "Conflict",
+              "message": "conflict-a + conflict-b conflict in 1 file(s); nothing was created",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708521123,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "ce1d9ae1-d011-485e-ada6-60347426b327",
+              "method": "layerfs_fs",
+              "phase": "end",
+              "ok": true,
+              "commit": {
+                "id": "12c70d21d2534bf6c1617cf076fe0184771b3e1c87b6b114e55a12994a661a1515",
+                "branch": "conflict-b",
+                "parent": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+                "secondParent": null,
+                "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+                "root": "e0e048985667f148a6d39ede621fbac25ed988d7616638c69789f94bde57bed5",
+                "via": "fs",
+                "message": "Apply filesystem changes",
+                "mergedFrom": null,
+                "time": 1792708521121,
+                "logical": 33,
+                "newCanonical": 1104,
+                "newStored": 464,
+                "newMetadata": 425,
+                "displaced": null,
+                "lww": [],
+                "lwwTruncated": false
+              }
+            },
+            {
+              "time": 1792708521123,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "a6d04bb2-31fa-4f55-97bd-f30fc2e79553",
+              "method": "layerfs_branch",
+              "phase": "start"
+            },
+            {
+              "time": 1792708521125,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "a6d04bb2-31fa-4f55-97bd-f30fc2e79553",
+              "method": "layerfs_branch",
+              "phase": "end",
+              "ok": false,
+              "error": {
+                "code": "Conflict",
+                "message": "Conflict: conflict-a + conflict-b conflict in 1 file(s); nothing was created"
+              }
+            },
+            {
+              "time": 1792708521125,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "855cd6e2-98db-40c9-b616-2aec98d3ce2f",
+              "method": "layerfs_fs",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-62",
+              "step": "855cd6e2-98db-40c9-b616-2aec98d3ce2f",
+              "method": "fs.write",
+              "args": {
+                "branch": "conflict-b",
+                "path": "/conflict.txt",
+                "contentBytes": 2
+              },
+              "start": "2026-10-22T22:35:21.126Z",
+              "scope": "792957105fed5867a8f89e3cb531ca45136b1e461b517ffde9c5283075956c50",
+              "phase": "end",
+              "ms": 5.612,
+              "queue": {
+                "ms": 0.273,
+                "thread": 0.273,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Committed",
+              "commit": "127702554d9aef402c751385e0c7edf10dd2b4b9a34119ade8edd4394ac624621c",
+              "sizes": {
+                "logical": 33,
+                "newCanonical": 902,
+                "newStored": 251,
+                "newMetadata": 251
+              },
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708521131,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "855cd6e2-98db-40c9-b616-2aec98d3ce2f",
+              "method": "layerfs_fs",
+              "phase": "end",
+              "ok": true,
+              "commit": {
+                "id": "127702554d9aef402c751385e0c7edf10dd2b4b9a34119ade8edd4394ac624621c",
+                "branch": "conflict-b",
+                "parent": "12c70d21d2534bf6c1617cf076fe0184771b3e1c87b6b114e55a12994a661a1515",
+                "secondParent": null,
+                "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+                "root": "135f31f212eb1ca1f9ff73623bec4299457ea55d9c2b10e09d6875661aea32ec",
+                "via": "fs",
+                "message": "Apply filesystem changes",
+                "mergedFrom": null,
+                "time": 1792708521130,
+                "logical": 33,
+                "newCanonical": 902,
+                "newStored": 251,
+                "newMetadata": 251,
+                "displaced": null,
+                "lww": [],
+                "lwwTruncated": false
+              }
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-63",
+              "step": "4950426e-db40-45ad-88c4-a269a48b82ff",
+              "method": "branch.merge",
+              "args": {
+                "branch": "conflict-a",
+                "with": "conflict-b",
+                "name": "resolved"
+              },
+              "start": "2026-10-22T22:35:21.132Z",
+              "scope": "397f6f166a8902e3e01c8c4ce49112cdcee34b26692a48d304065b635f98d5c8",
+              "phase": "end",
+              "ms": 1.892,
+              "queue": {
+                "ms": 0.221,
+                "thread": 0.221,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "Merged",
+              "commit": "124c1a8ddac0720bd4940f2aa7e1a697154737582572e1c106389595b52b964389",
+              "branch": "resolved",
+              "head": "124c1a8ddac0720bd4940f2aa7e1a697154737582572e1c106389595b52b964389",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708521132,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "4950426e-db40-45ad-88c4-a269a48b82ff",
+              "method": "layerfs_branch",
+              "phase": "start"
+            },
+            {
+              "time": 1792708521134,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "4950426e-db40-45ad-88c4-a269a48b82ff",
+              "method": "layerfs_branch",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708521134,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "60d03379-77bf-4176-ab45-d8532ebe5c16",
+              "method": "layerfs_inspect",
+              "phase": "start"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-64",
+              "step": "60d03379-77bf-4176-ab45-d8532ebe5c16",
+              "method": "operator.inspect.history",
+              "args": {},
+              "start": "2026-10-22T22:35:21.135Z",
+              "scope": "52ffcd9daef7e4bbf4500f6e136724d0d6369347c033807a0892db40ec067434",
+              "phase": "end",
+              "ms": 0.934,
+              "queue": {
+                "ms": 0.334,
+                "thread": 0.334,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-65",
+              "step": "60d03379-77bf-4176-ab45-d8532ebe5c16",
+              "method": "operator.sandbox.list",
+              "args": {},
+              "start": "2026-10-22T22:35:21.136Z",
+              "scope": "d9526aca791e89f8fdf49778679246e6d6fadb89243a0a0235431aa71c419c0b",
+              "phase": "end",
+              "ms": 0.834,
+              "queue": {
+                "ms": 0.102,
+                "thread": 0.102,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "layerfs_trace": 1,
+              "id": "e8194c91-66",
+              "step": "60d03379-77bf-4176-ab45-d8532ebe5c16",
+              "method": "operator.inspect.snapshot",
+              "args": {
+                "sandbox": "1"
+              },
+              "start": "2026-10-22T22:35:21.137Z",
+              "scope": "fb7357befac3e77881e7ec6c0847c712ff809c90c91489089bbfe74ac2f98136",
+              "phase": "end",
+              "ms": 2.684,
+              "queue": {
+                "ms": 0.194,
+                "thread": 0.194,
+                "connection": 0
+              },
+              "ok": true,
+              "kind": "ok",
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894"
+            },
+            {
+              "time": 1792708521139,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "60d03379-77bf-4176-ab45-d8532ebe5c16",
+              "method": "layerfs_inspect",
+              "phase": "end",
+              "ok": true
+            },
+            {
+              "time": 1792708521140,
+              "agent": "c4781071-fa92-4e99-ab63-94e9fcc30894",
+              "label": "lead",
+              "branch": "pi-work",
+              "id": "9152a3cd-0456-4ad6-90d6-555d9a3ed98c",
+              "method": "layerfs_inspect",
+              "phase": "start"
+            }
+          ],
+          "partial": false,
+          "retention": "tail: 1 MiB per trace, last 2000 records; full JSONL retained on disk"
+        }
+      }
+    },
+    {
+      "step": "layerfs_dashboard",
+      "value": {
+        "isError": false,
+        "result": {
+          "url": "http://127.0.0.1:36723/#[redacted]"
+        }
+      }
+    },
+    {
+      "step": "layerfs_branch",
+      "value": {
+        "isError": false,
+        "result": {
+          "items": [
+            {
+              "id": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+              "branch": "joined",
+              "parent": "12ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552",
+              "secondParent": "12edbc3bf320c839f21fa2bc2acad95f94ee8f8dd6ef9b8c4f8422e17175052acc",
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "5e3cdb1394e78e550444099aecf28df9dfe28759a355d38672027b5511a600ee",
+              "via": "merge",
+              "message": "integrate Beta",
+              "mergedFrom": null,
+              "time": 1792708521084,
+              "logical": 31,
+              "newCanonical": 976,
+              "newStored": 380,
+              "newMetadata": 380,
+              "displaced": null,
+              "lww": [],
+              "lwwTruncated": false
+            },
+            {
+              "id": "12ddd6cc5306cc97a316cd176d65b2470617ca8927ae97ca8c36e5af96d262b552",
+              "branch": "joined",
+              "parent": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+              "secondParent": null,
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "947531c9299412f73c15b36d3a2cc3212a9e01202a0e2a2a9b6c38846edaafde",
+              "via": "fs",
+              "message": "Apply filesystem changes",
+              "mergedFrom": null,
+              "time": 1792708520958,
+              "logical": 26,
+              "newCanonical": 906,
+              "newStored": 409,
+              "newMetadata": 366,
+              "displaced": null,
+              "lww": [],
+              "lwwTruncated": false
+            },
+            {
+              "id": "127b6debbdef7880c9ed695f42b78408a849d313487272c1ce1b0d8c1709412643",
+              "branch": "joined",
+              "parent": "120202a8fa2e1ba8756418a4967eeea3f6e160d95175500e12cf8f52b43a44c350",
+              "secondParent": null,
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "d1f5a161134f549e04f1fb31eb86fab46285e535cc958d80aaadfcebbc581046",
+              "via": "exec",
+              "message": "retained work",
+              "mergedFrom": null,
+              "time": 1792708520832,
+              "logical": 20,
+              "newCanonical": 808,
+              "newStored": 401,
+              "newMetadata": 356,
+              "displaced": null,
+              "lww": [],
+              "lwwTruncated": false
+            },
+            {
+              "id": "120202a8fa2e1ba8756418a4967eeea3f6e160d95175500e12cf8f52b43a44c350",
+              "branch": "joined",
+              "parent": "122f0a975d20a8020b97757d4eef1c10de5e8f789542cf12499f726e4525aecbb9",
+              "secondParent": null,
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "4ee7956626b02f7cf1a2be1af1b8cf7be01533613e948663f38290a0dc55df3a",
+              "via": "fs",
+              "message": "Apply filesystem changes",
+              "mergedFrom": null,
+              "time": 1792708520381,
+              "logical": 12,
+              "newCanonical": 699,
+              "newStored": 367,
+              "newMetadata": 328,
+              "displaced": null,
+              "lww": [],
+              "lwwTruncated": false
+            },
+            {
+              "id": "122f0a975d20a8020b97757d4eef1c10de5e8f789542cf12499f726e4525aecbb9",
+              "branch": "joined",
+              "parent": "12d35d625cff6d217c139e88409cccbd8bfac2a7d9a82ba15428d732186e599bc5",
+              "secondParent": null,
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "9b967a006af12976bce8645663564a49bd46c41bca53c2f25dfc6e709686812e",
+              "via": "fs",
+              "message": "Apply filesystem changes",
+              "mergedFrom": null,
+              "time": 1792708520377,
+              "logical": 10,
+              "newCanonical": 663,
+              "newStored": 377,
+              "newMetadata": 335,
+              "displaced": null,
+              "lww": [],
+              "lwwTruncated": false
+            },
+            {
+              "id": "12d35d625cff6d217c139e88409cccbd8bfac2a7d9a82ba15428d732186e599bc5",
+              "branch": "joined",
+              "parent": null,
+              "secondParent": null,
+              "base": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+              "root": "794d9c5057fd3cc6a26cdf7aa5c9d9b28ea3a91e2d22434024eb7324744b5366",
+              "via": "fs",
+              "message": "Apply filesystem changes",
+              "mergedFrom": null,
+              "time": 1792708520371,
+              "logical": 0,
+              "newCanonical": 392,
+              "newStored": 274,
+              "newMetadata": 274,
+              "displaced": null,
+              "lww": [],
+              "lwwTruncated": false
+            }
+          ],
+          "hasMore": false,
+          "nextPagePos": null
+        }
+      }
+    },
+    {
+      "step": "acceptance",
+      "value": {
+        "project": "parity-6a5f9c05",
+        "importProject": "import-6a5f9c05",
+        "genesis": "32a590bb791795ffb3a0531c0e9a522160fe5880d7024b7c893f6aa58dccc83a31",
+        "publishedLayer": "322eeeeca40b4d8176293015fd1265661b95d5f8833002b2e46dd3549c3792e436",
+        "mergedHead": "125b9d13009ec6ece160aec51516ca63f8ec3154f6347620cdf652cc3b734cafc0",
+        "workers": [
+          {
+            "id": "79b5bd1e-a269-47e3-9ed8-aad52f27e074",
+            "label": "Alpha",
+            "branch": "agent-79b5bd1e-a26",
+            "state": "running"
+          },
+          {
+            "id": "2d8cef85-2d9a-4ffd-9af7-c83b86d89ba4",
+            "label": "Beta",
+            "branch": "agent-2d8cef85-2d9",
+            "state": "running"
+          }
+        ],
+        "modelRequests": 4,
+        "workspaces": 0,
+        "checks": "empty/import, process Busy/cancel, two real Pi worker loops, merges/conflict/publish/reopen, trace attribution, authenticated dashboard"
+      }
+    },
+    {
+      "step": "browser",
+      "value": {
+        "url": "http://127.0.0.1:36723/#[redacted]",
+        "project": "parity-6a5f9c05"
+      }
+    },
+    {
+      "step": "removed",
+      "value": {
+        "projects": ["parity-6a5f9c05", "import-6a5f9c05"],
+        "sourcePreserved": true
+      }
+    }
+  ]
+}

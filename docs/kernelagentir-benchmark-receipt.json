@@ -1,0 +1,907 @@
+{
+  "date": "2026-10-22",
+  "repository": {
+    "source": "/home/yanweiye/Projects/KernelAgentIR",
+    "copy": "/tmp/pi-layerfs-kernelagentir-HSOK3zhe/source",
+    "revision": "897392829b73af48eed7f2752aca6aafebb17d0b",
+    "originalUnchanged": true,
+    "manifestSHA256": "8f80923afc99bed5d6b270a07899b2d7b237557e5b31717ce4dedcefdb381903",
+    "entries": 34587,
+    "regularFiles": 30918,
+    "symlinks": 4
+  },
+  "installation": {
+    "pi": "1.4.0",
+    "package": "/home/yanweiye/.t3/projects/pi-layerfs",
+    "globalPackageExtensions": [],
+    "launcher": "/home/yanweiye/.local/bin/pi-layerfs",
+    "activation": "Explicit container launcher; normal Pi remains usable without a LayerFS configuration."
+  },
+  "machine": {
+    "cpu": "AMD Ryzen 9 5950X 16-Core Processor",
+    "logicalCPUs": 32,
+    "memory": "125 GiB",
+    "kernel": "6.8.0-142-generic",
+    "node": "24.21.0",
+    "python": "3.12.11",
+    "pytest": "9.0.3",
+    "hypothesis": "6.152.9",
+    "runtimeImage": "sha256:edf2c7f96a2c3eb93bf70e0c2b084619127aa5ec865035f8c5e9d550ab5e3700",
+    "runtimeImageBytes": 1301434225,
+    "originalRuntimeImageBytes": 1187909904
+  },
+  "method": {
+    "parallelWorkers": 4,
+    "rounds": 3,
+    "performance": "Deterministic replay through real Pi tools; real Git worktrees, LayerFS FUSE workspaces, pytest, commits and merges. No LLM inference in timed comparisons.",
+    "cache": "Page cache not flushed; live workstation with other services; first daemon creation included where it occurs.",
+    "scope": "Four independent regression tests plus 27 existing CPU tests per four-worker batch. Full-repository and GPU acceptance are outside this benchmark.",
+    "fullLane": "Each .venv really supplies its own pytest/hypothesis (PYTHONPATH=.); source-only uses common minimal image dependencies.",
+    "hardlink": "cp -al from an owned disposable cache, not actual uv sync; shared dependency files cannot be independently modified safely.",
+    "gitDisk": "Sum of worktree allocated bytes + allocated Git main checkout + Git metadata delta. Shared input snapshot excluded.",
+    "layerfsDisk": "Physical du of global Store and home/backing/journals plus Docker SizeRw, after first four-worker batch; runtime image charged separately.",
+    "hardlinkDisk": "Single du invocation over shared environment and all worktrees, counting linked inodes only once."
+  },
+  "source": {
+    "init": {
+      "seconds": 0.09231072200000016,
+      "beforeImport": {
+        "entries": [["home", 4096]],
+        "volumeBytes": 4096,
+        "dockerWritable": 0
+      },
+      "afterImport": {
+        "entries": [["global", 2674688], ["home", 2670592]],
+        "volumeBytes": 5345280,
+        "dockerWritable": 0
+      }
+    },
+    "results": [
+      {
+        "lane": "source",
+        "backend": "git",
+        "round": 0,
+        "workers": 4,
+        "setupSeconds": 0.07725995599999988,
+        "sessionSeconds": 0.011896272999999838,
+        "workSeconds": 4.916277817999999,
+        "mergeSeconds": 0.05584085099999993,
+        "totalSeconds": 5.061274897999999,
+        "worktreeBytes": 13058048,
+        "gitMetadataDelta": 409600,
+        "layerfsSteadyDeltaBytes": null,
+        "layerfsImportBytes": 5341184,
+        "prepDisk": {
+          "entries": [["global", 2674688], ["home", 2674688]],
+          "volumeBytes": 5349376,
+          "dockerWritable": 0
+        },
+        "afterWork": {
+          "entries": [["global", 2674688], ["home", 2674688]],
+          "volumeBytes": 5349376,
+          "dockerWritable": 0
+        },
+        "endStorage": {
+          "entries": [["global", 2674688], ["home", 2674688]],
+          "volumeBytes": 5349376,
+          "dockerWritable": 0
+        }
+      },
+      {
+        "lane": "source",
+        "backend": "layerfs-bash",
+        "round": 0,
+        "workers": 4,
+        "setupSeconds": 0.0018294209999994563,
+        "sessionSeconds": 0.02921930799999973,
+        "workSeconds": 5.277662241,
+        "mergeSeconds": 0.014845612000000983,
+        "totalSeconds": 5.323556582,
+        "worktreeBytes": null,
+        "gitMetadataDelta": null,
+        "layerfsSteadyDeltaBytes": 913408,
+        "layerfsImportBytes": 5341184,
+        "prepDisk": {
+          "entries": [["global", 2723840], ["home", 2740224]],
+          "volumeBytes": 5464064,
+          "dockerWritable": 0
+        },
+        "afterWork": {
+          "entries": [["global", 3100672], ["home", 2850816]],
+          "volumeBytes": 5951488,
+          "dockerWritable": 12344671
+        },
+        "endStorage": {
+          "entries": [["global", 3395584], ["home", 2867200]],
+          "volumeBytes": 6262784,
+          "dockerWritable": 12344671
+        }
+      },
+      {
+        "lane": "source",
+        "backend": "layerfs-retained",
+        "round": 0,
+        "workers": 4,
+        "setupSeconds": 0.0014796149999983755,
+        "sessionSeconds": 0.03605346399999871,
+        "workSeconds": 4.925350881999999,
+        "mergeSeconds": 0.018468414999999367,
+        "totalSeconds": 4.981352375999996,
+        "worktreeBytes": null,
+        "gitMetadataDelta": null,
+        "layerfsSteadyDeltaBytes": 868352,
+        "layerfsImportBytes": 5341184,
+        "prepDisk": {
+          "entries": [["global", 3444736], ["home", 2924544]],
+          "volumeBytes": 6369280,
+          "dockerWritable": 12344671
+        },
+        "afterWork": {
+          "entries": [["global", 3764224], ["home", 3039232]],
+          "volumeBytes": 6803456,
+          "dockerWritable": 12571318
+        },
+        "endStorage": {
+          "entries": [["global", 4071424], ["home", 3059712]],
+          "volumeBytes": 7131136,
+          "dockerWritable": 12571318
+        }
+      },
+      {
+        "lane": "source",
+        "backend": "layerfs-retained",
+        "round": 1,
+        "workers": 4,
+        "setupSeconds": 0.0014245239999982004,
+        "sessionSeconds": 0.041948424000001976,
+        "workSeconds": 4.966535072999999,
+        "mergeSeconds": 0.015385342000001401,
+        "totalSeconds": 5.025293363,
+        "worktreeBytes": null,
+        "gitMetadataDelta": null,
+        "layerfsSteadyDeltaBytes": 847872,
+        "layerfsImportBytes": 5341184,
+        "prepDisk": {
+          "entries": [["global", 4120576], ["home", 3117056]],
+          "volumeBytes": 7237632,
+          "dockerWritable": 12571318
+        },
+        "afterWork": {
+          "entries": [["global", 4431872], ["home", 3231744]],
+          "volumeBytes": 7663616,
+          "dockerWritable": 12797985
+        },
+        "endStorage": {
+          "entries": [["global", 4726784], ["home", 3252224]],
+          "volumeBytes": 7979008,
+          "dockerWritable": 12797985
+        }
+      },
+      {
+        "lane": "source",
+        "backend": "layerfs-bash",
+        "round": 1,
+        "workers": 4,
+        "setupSeconds": 0.0012723420000002078,
+        "sessionSeconds": 0.041005528000001505,
+        "workSeconds": 4.943432421000002,
+        "mergeSeconds": 0.014478825999998663,
+        "totalSeconds": 5.000189117000002,
+        "worktreeBytes": null,
+        "gitMetadataDelta": null,
+        "layerfsSteadyDeltaBytes": 802816,
+        "layerfsImportBytes": 5341184,
+        "prepDisk": {
+          "entries": [["global", 4780032], ["home", 3309568]],
+          "volumeBytes": 8089600,
+          "dockerWritable": 12797985
+        },
+        "afterWork": {
+          "entries": [["global", 5058560], ["home", 3416064]],
+          "volumeBytes": 8474624,
+          "dockerWritable": 13024662
+        },
+        "endStorage": {
+          "entries": [["global", 5345280], ["home", 3436544]],
+          "volumeBytes": 8781824,
+          "dockerWritable": 13024662
+        }
+      },
+      {
+        "lane": "source",
+        "backend": "git",
+        "round": 1,
+        "workers": 4,
+        "setupSeconds": 0.08335730999999942,
+        "sessionSeconds": 0.0014858349999994972,
+        "workSeconds": 4.932627296999999,
+        "mergeSeconds": 0.058086458999998286,
+        "totalSeconds": 5.075556900999996,
+        "worktreeBytes": 13058048,
+        "gitMetadataDelta": 311296,
+        "layerfsSteadyDeltaBytes": null,
+        "layerfsImportBytes": 5341184,
+        "prepDisk": {
+          "entries": [["global", 5345280], ["home", 3436544]],
+          "volumeBytes": 8781824,
+          "dockerWritable": 13024662
+        },
+        "afterWork": {
+          "entries": [["global", 5345280], ["home", 3436544]],
+          "volumeBytes": 8781824,
+          "dockerWritable": 13024662
+        },
+        "endStorage": {
+          "entries": [["global", 5345280], ["home", 3436544]],
+          "volumeBytes": 8781824,
+          "dockerWritable": 13024662
+        }
+      },
+      {
+        "lane": "source",
+        "backend": "git",
+        "round": 2,
+        "workers": 4,
+        "setupSeconds": 0.08243546399999832,
+        "sessionSeconds": 0.0018815320000030624,
+        "workSeconds": 4.970511760999998,
+        "mergeSeconds": 0.059208567999994556,
+        "totalSeconds": 5.114037324999994,
+        "worktreeBytes": 9793536,
+        "gitMetadataDelta": 315392,
+        "layerfsSteadyDeltaBytes": null,
+        "layerfsImportBytes": 5341184,
+        "prepDisk": {
+          "entries": [["global", 5345280], ["home", 3436544]],
+          "volumeBytes": 8781824,
+          "dockerWritable": 13024662
+        },
+        "afterWork": {
+          "entries": [["global", 5345280], ["home", 3436544]],
+          "volumeBytes": 8781824,
+          "dockerWritable": 13024662
+        },
+        "endStorage": {
+          "entries": [["global", 5345280], ["home", 3436544]],
+          "volumeBytes": 8781824,
+          "dockerWritable": 13024662
+        }
+      },
+      {
+        "lane": "source",
+        "backend": "layerfs-bash",
+        "round": 2,
+        "workers": 4,
+        "setupSeconds": 0.001483474999993632,
+        "sessionSeconds": 0.04518026900000405,
+        "workSeconds": 4.864220401000006,
+        "mergeSeconds": 0.017031040000001666,
+        "totalSeconds": 4.927915185000005,
+        "worktreeBytes": null,
+        "gitMetadataDelta": null,
+        "layerfsSteadyDeltaBytes": 880640,
+        "layerfsImportBytes": 5341184,
+        "prepDisk": {
+          "entries": [["global", 5394432], ["home", 3493888]],
+          "volumeBytes": 8888320,
+          "dockerWritable": 13024662
+        },
+        "afterWork": {
+          "entries": [["global", 5722112], ["home", 3596288]],
+          "volumeBytes": 9318400,
+          "dockerWritable": 13251339
+        },
+        "endStorage": {
+          "entries": [["global", 6045696], ["home", 3616768]],
+          "volumeBytes": 9662464,
+          "dockerWritable": 13251339
+        }
+      },
+      {
+        "lane": "source",
+        "backend": "layerfs-retained",
+        "round": 2,
+        "workers": 4,
+        "setupSeconds": 0.0015492470000026514,
+        "sessionSeconds": 0.04173171999999613,
+        "workSeconds": 4.849339188000005,
+        "mergeSeconds": 0.01818897999999899,
+        "totalSeconds": 4.910809135000003,
+        "worktreeBytes": null,
+        "gitMetadataDelta": null,
+        "layerfsSteadyDeltaBytes": 892928,
+        "layerfsImportBytes": 5341184,
+        "prepDisk": {
+          "entries": [["global", 6103040], ["home", 3674112]],
+          "volumeBytes": 9777152,
+          "dockerWritable": 13251339
+        },
+        "afterWork": {
+          "entries": [["global", 6422528], ["home", 3792896]],
+          "volumeBytes": 10215424,
+          "dockerWritable": 13478016
+        },
+        "endStorage": {
+          "entries": [["global", 6742016], ["home", 3813376]],
+          "volumeBytes": 10555392,
+          "dockerWritable": 13478016
+        }
+      }
+    ]
+  },
+  "full": {
+    "init": {
+      "seconds": 22.70283487,
+      "beforeImport": {
+        "entries": [["home", 4096]],
+        "volumeBytes": 4096,
+        "dockerWritable": 0
+      },
+      "afterImport": {
+        "entries": [["global", 2823180288], ["home", 2822791168]],
+        "volumeBytes": 5645971456,
+        "dockerWritable": 0
+      }
+    },
+    "results": [
+      {
+        "lane": "full",
+        "backend": "git",
+        "round": 0,
+        "workers": 4,
+        "setupSeconds": 9.735276512999997,
+        "sessionSeconds": 0.008174345999999787,
+        "workSeconds": 5.080503197999999,
+        "mergeSeconds": 0.08204361999999674,
+        "totalSeconds": 14.905997676999993,
+        "worktreeBytes": 20439261184,
+        "gitMetadataDelta": 413696,
+        "layerfsSteadyDeltaBytes": null,
+        "layerfsImportBytes": 5645967360,
+        "prepDisk": {
+          "entries": [["global", 2823180288], ["home", 2822795264]],
+          "volumeBytes": 5645975552,
+          "dockerWritable": 0
+        },
+        "afterWork": {
+          "entries": [["global", 2823180288], ["home", 2822795264]],
+          "volumeBytes": 5645975552,
+          "dockerWritable": 0
+        },
+        "endStorage": {
+          "entries": [["global", 2823180288], ["home", 2822795264]],
+          "volumeBytes": 5645975552,
+          "dockerWritable": 0
+        }
+      },
+      {
+        "lane": "full",
+        "backend": "layerfs-bash",
+        "round": 0,
+        "workers": 4,
+        "setupSeconds": 0.0019598299999997837,
+        "sessionSeconds": 0.027962139999995996,
+        "workSeconds": 5.405986747999996,
+        "mergeSeconds": 0.027634855000003882,
+        "totalSeconds": 5.4635435729999955,
+        "worktreeBytes": null,
+        "gitMetadataDelta": null,
+        "layerfsSteadyDeltaBytes": 1118208,
+        "layerfsImportBytes": 5645967360,
+        "prepDisk": {
+          "entries": [["global", 2823229440], ["home", 2822860800]],
+          "volumeBytes": 5646090240,
+          "dockerWritable": 0
+        },
+        "afterWork": {
+          "entries": [["global", 2823749632], ["home", 2822971392]],
+          "volumeBytes": 5646721024,
+          "dockerWritable": 12156946
+        },
+        "endStorage": {
+          "entries": [["global", 2824105984], ["home", 2822987776]],
+          "volumeBytes": 5647093760,
+          "dockerWritable": 12156946
+        }
+      },
+      {
+        "lane": "full",
+        "backend": "layerfs-retained",
+        "round": 0,
+        "workers": 4,
+        "setupSeconds": 0.0013712010000017471,
+        "sessionSeconds": 0.03901412999999593,
+        "workSeconds": 4.692740565,
+        "mergeSeconds": 0.030084703000000445,
+        "totalSeconds": 4.763210598999999,
+        "worktreeBytes": null,
+        "gitMetadataDelta": null,
+        "layerfsSteadyDeltaBytes": 987136,
+        "layerfsImportBytes": 5645967360,
+        "prepDisk": {
+          "entries": [["global", 2824155136], ["home", 2823049216]],
+          "volumeBytes": 5647204352,
+          "dockerWritable": 12156946
+        },
+        "afterWork": {
+          "entries": [["global", 2824540160], ["home", 2823163904]],
+          "volumeBytes": 5647704064,
+          "dockerWritable": 12195868
+        },
+        "endStorage": {
+          "entries": [["global", 2824900608], ["home", 2823180288]],
+          "volumeBytes": 5648080896,
+          "dockerWritable": 12195868
+        }
+      },
+      {
+        "lane": "full",
+        "backend": "layerfs-retained",
+        "round": 1,
+        "workers": 4,
+        "setupSeconds": 0.001686126000000513,
+        "sessionSeconds": 0.040892768999998226,
+        "workSeconds": 4.670570808000004,
+        "mergeSeconds": 0.02951957499999844,
+        "totalSeconds": 4.742669278000001,
+        "worktreeBytes": null,
+        "gitMetadataDelta": null,
+        "layerfsSteadyDeltaBytes": 1069056,
+        "layerfsImportBytes": 5645967360,
+        "prepDisk": {
+          "entries": [["global", 2824949760], ["home", 2823237632]],
+          "volumeBytes": 5648187392,
+          "dockerWritable": 12195868
+        },
+        "afterWork": {
+          "entries": [["global", 2825363456], ["home", 2823352320]],
+          "volumeBytes": 5648715776,
+          "dockerWritable": 12234810
+        },
+        "endStorage": {
+          "entries": [["global", 2825777152], ["home", 2823372800]],
+          "volumeBytes": 5649149952,
+          "dockerWritable": 12234810
+        }
+      },
+      {
+        "lane": "full",
+        "backend": "layerfs-bash",
+        "round": 1,
+        "workers": 4,
+        "setupSeconds": 0.0021239320000022415,
+        "sessionSeconds": 0.04752401100000134,
+        "workSeconds": 4.697210261,
+        "mergeSeconds": 0.04984521799999493,
+        "totalSeconds": 4.796703421999999,
+        "worktreeBytes": null,
+        "gitMetadataDelta": null,
+        "layerfsSteadyDeltaBytes": 1671168,
+        "layerfsImportBytes": 5645967360,
+        "prepDisk": {
+          "entries": [["global", 2825826304], ["home", 2823430144]],
+          "volumeBytes": 5649256448,
+          "dockerWritable": 12234810
+        },
+        "afterWork": {
+          "entries": [["global", 2826235904], ["home", 2823536640]],
+          "volumeBytes": 5649772544,
+          "dockerWritable": 12273762
+        },
+        "endStorage": {
+          "entries": [["global", 2827264000], ["home", 2823557120]],
+          "volumeBytes": 5650821120,
+          "dockerWritable": 12273762
+        }
+      },
+      {
+        "lane": "full",
+        "backend": "git",
+        "round": 1,
+        "workers": 4,
+        "setupSeconds": 8.263787034000002,
+        "sessionSeconds": 0.0014125420000054873,
+        "workSeconds": 4.973605681000001,
+        "mergeSeconds": 0.06889153399999487,
+        "totalSeconds": 13.307696791000005,
+        "worktreeBytes": 20439265280,
+        "gitMetadataDelta": 315392,
+        "layerfsSteadyDeltaBytes": null,
+        "layerfsImportBytes": 5645967360,
+        "prepDisk": {
+          "entries": [["global", 2827264000], ["home", 2823557120]],
+          "volumeBytes": 5650821120,
+          "dockerWritable": 12273762
+        },
+        "afterWork": {
+          "entries": [["global", 2827264000], ["home", 2823557120]],
+          "volumeBytes": 5650821120,
+          "dockerWritable": 12273762
+        },
+        "endStorage": {
+          "entries": [["global", 2827264000], ["home", 2823557120]],
+          "volumeBytes": 5650821120,
+          "dockerWritable": 12273762
+        }
+      },
+      {
+        "lane": "full",
+        "backend": "git",
+        "round": 2,
+        "workers": 4,
+        "setupSeconds": 8.088498065000007,
+        "sessionSeconds": 0.001315110999988974,
+        "workSeconds": 5.31200963500001,
+        "mergeSeconds": 0.07235116999999446,
+        "totalSeconds": 13.474173981,
+        "worktreeBytes": 20439298048,
+        "gitMetadataDelta": 315392,
+        "layerfsSteadyDeltaBytes": null,
+        "layerfsImportBytes": 5645967360,
+        "prepDisk": {
+          "entries": [["global", 2827264000], ["home", 2823557120]],
+          "volumeBytes": 5650821120,
+          "dockerWritable": 12273762
+        },
+        "afterWork": {
+          "entries": [["global", 2827264000], ["home", 2823557120]],
+          "volumeBytes": 5650821120,
+          "dockerWritable": 12273762
+        },
+        "endStorage": {
+          "entries": [["global", 2827264000], ["home", 2823557120]],
+          "volumeBytes": 5650821120,
+          "dockerWritable": 12273762
+        }
+      },
+      {
+        "lane": "full",
+        "backend": "layerfs-bash",
+        "round": 2,
+        "workers": 4,
+        "setupSeconds": 0.0026437909999949623,
+        "sessionSeconds": 0.05038105999999971,
+        "workSeconds": 4.690086202999999,
+        "mergeSeconds": 0.028006803999989643,
+        "totalSeconds": 4.771117857999983,
+        "worktreeBytes": null,
+        "gitMetadataDelta": null,
+        "layerfsSteadyDeltaBytes": 188416,
+        "layerfsImportBytes": 5645967360,
+        "prepDisk": {
+          "entries": [["global", 2827264000], ["home", 2823614464]],
+          "volumeBytes": 5650878464,
+          "dockerWritable": 12273762
+        },
+        "afterWork": {
+          "entries": [["global", 2827264000], ["home", 2823725056]],
+          "volumeBytes": 5650989056,
+          "dockerWritable": 12312714
+        },
+        "endStorage": {
+          "entries": [["global", 2827264000], ["home", 2823745536]],
+          "volumeBytes": 5651009536,
+          "dockerWritable": 12312714
+        }
+      },
+      {
+        "lane": "full",
+        "backend": "layerfs-retained",
+        "round": 2,
+        "workers": 4,
+        "setupSeconds": 0.0025374290000036125,
+        "sessionSeconds": 0.044785364000010305,
+        "workSeconds": 4.740586255000002,
+        "mergeSeconds": 0.028955057999992276,
+        "totalSeconds": 4.816864106000008,
+        "worktreeBytes": null,
+        "gitMetadataDelta": null,
+        "layerfsSteadyDeltaBytes": 192512,
+        "layerfsImportBytes": 5645967360,
+        "prepDisk": {
+          "entries": [["global", 2827264000], ["home", 2823802880]],
+          "volumeBytes": 5651066880,
+          "dockerWritable": 12312714
+        },
+        "afterWork": {
+          "entries": [["global", 2827264000], ["home", 2823917568]],
+          "volumeBytes": 5651181568,
+          "dockerWritable": 12351666
+        },
+        "endStorage": {
+          "entries": [["global", 2827264000], ["home", 2823938048]],
+          "volumeBytes": 5651202048,
+          "dockerWritable": 12351666
+        }
+      }
+    ]
+  },
+  "hardlink": {
+    "init": {
+      "seconds": 0.03915087500000004,
+      "beforeImport": {
+        "entries": [["global", 2827264000], ["home", 2823962624]],
+        "volumeBytes": 5651226624,
+        "dockerWritable": 12351666
+      },
+      "afterImport": {
+        "entries": [["global", 2827264000], ["home", 2823983104]],
+        "volumeBytes": 5651247104,
+        "dockerWritable": 12351666
+      }
+    },
+    "results": [
+      {
+        "lane": "full",
+        "backend": "git-hardlink",
+        "round": 0,
+        "workers": 4,
+        "setupSeconds": 0.5246402459999999,
+        "sessionSeconds": 0.008212808999999651,
+        "workSeconds": 4.589278719,
+        "mergeSeconds": 0.32484422799999996,
+        "totalSeconds": 5.4469760019999995,
+        "worktreeBytes": 5177044992,
+        "gitMetadataDelta": 413696,
+        "layerfsSteadyDeltaBytes": null,
+        "layerfsImportBytes": 20480,
+        "prepDisk": {
+          "entries": [["global", 2827264000], ["home", 2823983104]],
+          "volumeBytes": 5651247104,
+          "dockerWritable": 12351666
+        },
+        "afterWork": {
+          "entries": [["global", 2827264000], ["home", 2823983104]],
+          "volumeBytes": 5651247104,
+          "dockerWritable": 12351666
+        },
+        "endStorage": {
+          "entries": [["global", 2827264000], ["home", 2823983104]],
+          "volumeBytes": 5651247104,
+          "dockerWritable": 12351666
+        }
+      },
+      {
+        "lane": "full",
+        "backend": "git-hardlink",
+        "round": 1,
+        "workers": 4,
+        "setupSeconds": 0.5143996310000002,
+        "sessionSeconds": 0.002233024999999543,
+        "workSeconds": 4.603659468,
+        "mergeSeconds": 0.0527528999999995,
+        "totalSeconds": 5.173045023999999,
+        "worktreeBytes": 5177073664,
+        "gitMetadataDelta": 315392,
+        "layerfsSteadyDeltaBytes": null,
+        "layerfsImportBytes": 20480,
+        "prepDisk": {
+          "entries": [["global", 2827264000], ["home", 2823983104]],
+          "volumeBytes": 5651247104,
+          "dockerWritable": 12351666
+        },
+        "afterWork": {
+          "entries": [["global", 2827264000], ["home", 2823983104]],
+          "volumeBytes": 5651247104,
+          "dockerWritable": 12351666
+        },
+        "endStorage": {
+          "entries": [["global", 2827264000], ["home", 2823983104]],
+          "volumeBytes": 5651247104,
+          "dockerWritable": 12351666
+        }
+      },
+      {
+        "lane": "full",
+        "backend": "git-hardlink",
+        "round": 2,
+        "workers": 4,
+        "setupSeconds": 0.5023962670000001,
+        "sessionSeconds": 0.002056183000000601,
+        "workSeconds": 4.588097901999998,
+        "mergeSeconds": 0.051394840000000844,
+        "totalSeconds": 5.1439451919999994,
+        "worktreeBytes": 5177085952,
+        "gitMetadataDelta": 315392,
+        "layerfsSteadyDeltaBytes": null,
+        "layerfsImportBytes": 20480,
+        "prepDisk": {
+          "entries": [["global", 2827264000], ["home", 2823983104]],
+          "volumeBytes": 5651247104,
+          "dockerWritable": 12351666
+        },
+        "afterWork": {
+          "entries": [["global", 2827264000], ["home", 2823983104]],
+          "volumeBytes": 5651247104,
+          "dockerWritable": 12351666
+        },
+        "endStorage": {
+          "entries": [["global", 2827264000], ["home", 2823983104]],
+          "volumeBytes": 5651247104,
+          "dockerWritable": 12351666
+        }
+      }
+    ]
+  },
+  "summary": {
+    "source": {
+      "git": {
+        "total": 5.075556900999996,
+        "range": [5.061274897999999, 5.114037324999994],
+        "setup": 0.08243546399999832,
+        "work": 4.932627296999999,
+        "session": 0.0018815320000030624,
+        "merge": 0.058086458999998286,
+        "disk": 13058048
+      },
+      "layerfs-bash": {
+        "total": 5.000189117000002,
+        "range": [4.927915185000005, 5.323556582],
+        "setup": 0.001483474999993632,
+        "work": 4.943432421000002,
+        "session": 0.041005528000001505,
+        "merge": 0.014845612000000983,
+        "disk": 880640
+      },
+      "layerfs-retained": {
+        "total": 4.981352375999996,
+        "range": [4.910809135000003, 5.025293363],
+        "setup": 0.0014796149999983755,
+        "work": 4.925350881999999,
+        "session": 0.04173171999999613,
+        "merge": 0.01818897999999899,
+        "disk": 868352
+      }
+    },
+    "full": {
+      "git": {
+        "total": 13.474173981,
+        "range": [13.307696791000005, 14.905997676999993],
+        "setup": 8.263787034000002,
+        "work": 5.080503197999999,
+        "session": 0.0014125420000054873,
+        "merge": 0.07235116999999446,
+        "disk": 20439265280
+      },
+      "layerfs-bash": {
+        "total": 4.796703421999999,
+        "range": [4.771117857999983, 5.4635435729999955],
+        "setup": 0.0021239320000022415,
+        "work": 4.697210261,
+        "session": 0.04752401100000134,
+        "merge": 0.028006803999989643,
+        "disk": 1118208
+      },
+      "layerfs-retained": {
+        "total": 4.763210598999999,
+        "range": [4.742669278000001, 4.816864106000008],
+        "setup": 0.001686126000000513,
+        "work": 4.692740565,
+        "session": 0.040892768999998226,
+        "merge": 0.02951957499999844,
+        "disk": 987136
+      }
+    },
+    "hardlink": {
+      "git-hardlink": {
+        "total": 5.173045023999999,
+        "range": [5.1439451919999994, 5.4469760019999995],
+        "setup": 0.5143996310000002,
+        "work": 4.589278719,
+        "session": 0.002233024999999543,
+        "merge": 0.0527528999999995,
+        "disk": 5177073664
+      }
+    }
+  },
+  "derived": {
+    "fullBytes": 5659246610,
+    "sourceBytes": 18603359,
+    "fullGiB": 5.270584123209119,
+    "fullCopyGiB": 19.03554916381836,
+    "hardlinkGiB": 4.821525573730469,
+    "fullSavedPercent": 72.31885007353718,
+    "vsHardlinkAddedPercent": 9.205531554241574,
+    "fullTimeReduction": 64.6493313377382,
+    "hardlinkTimeReduction": 7.922498704314396,
+    "sourceTimeReduction": 1.8560431266456678,
+    "fullWithImage": 6960680835,
+    "fullWithImageSaved": 65.95312714533014,
+    "importBreakEvenBatches": 3,
+    "hardlinkImportBreakEvenBatches": 50,
+    "gitProjectBytes": {
+      "source": 18165760,
+      "full": 20444405760,
+      "hardlink": 5182197760
+    }
+  },
+  "realDevelopment": {
+    "model": "magpie/auto/deepseek-v4.1-flash",
+    "workers": [
+      {
+        "id": "b87549ea-bbef-4511-86fd-576ef6a78938",
+        "label": "Real developer 0",
+        "branch": "agent-b87549ea-bbe",
+        "state": "completed",
+        "result": "Created `tests/test_real_parallel_0.py` with a regression test covering PEAddr stability after mutating both the source dict and the `as_dict()` result.\n\n**Test result (targeted):**\n```\n1 passed in 0.06s\n```\n\nThe full instructed command including `.` also collected unrelated project tests and failed during collection due to missing environment dependencies (`numpy`, `cuda`), not because of this test. Running the new test alone passes.\n\n**Final LayerFS Commit:** `12afcef388934d4b7bb894b1af6b533839e5854b46fd392270d90e41c9e47401c7` on Branch `agent-b87549ea-bbe`.\n\nNo existing files were edited; no Workspaces remain open."
+      },
+      {
+        "id": "b5eb7753-fb90-44db-8b1b-e97613276a69",
+        "label": "Real developer 1",
+        "branch": "agent-b5eb7753-fb9",
+        "state": "completed",
+        "result": "Created `tests/test_real_parallel_1.py` with one regression test covering:\n\n- Adjacent half-open extents `[0, 16)` and `[16, 32)` do **not** overlap in either order.\n- Strict containment of `[16, 32)` inside `[0, 64)` **does** overlap in either order.\n\nChecks:\n- Targeted test run: **1 passed in 0.06s**\n- The provided full command prefix was also run verbatim; collecting `.` failed on unrelated missing optional dependencies (`numpy`, `cuda`), not on this test.\n- No existing files edited; no Workspaces retained.\n\nFinal LayerFS Commit: `12ceaf22fa5931b72896fa835a48219dcd0f8fc2125c209fb0df17ae00e54238ba`"
+      },
+      {
+        "id": "a8189f06-169f-4e9a-9ea5-c37fb80d9483",
+        "label": "Real developer 2",
+        "branch": "agent-a8189f06-169",
+        "state": "completed",
+        "result": "Done.\n\n**Test file:** `tests/test_real_parallel_2.py` (only new file; no edits to existing sources)\n\n**Test:** parametrized over `Dtype.int4`, `Dtype.fp4_e2m1`, `Dtype.fp4_e3m0`:\n- `dtype.size_bytes == 0.5`\n- `32 * size_bytes == 16` (32 elements pack into 16 bytes)\n- enum value round-trips: `dtype.value == dtype.name` and `Dtype(dtype.value) is dtype`\n\n**Result:** `3 passed` (exit code 0) using the prescribed Python/pytest invocation with `PYTHONPATH=.:/opt/bench-deps`, plugin autoload disabled, cache dir `/tmp/real-pytest-2`.\n\n**Final LayerFS Commit:** `123342cc7e2959298903a54ac1a05a7f228e0d448e1fff96fb958d1da3a614b3f0` on Branch `agent-a8189f06-169` (subsequent run was `UpToDate`; no workspace retained, nothing published)."
+      },
+      {
+        "id": "4cc1ccd9-6958-44c2-8ef3-05d71607084f",
+        "label": "Real developer 3",
+        "branch": "agent-4cc1ccd9-695",
+        "state": "completed",
+        "result": "Created `tests/test_real_parallel_3.py` with one regression test asserting that `Region.join` and `Region.meet` keep adjacent `BankRegion`s `[0,16)` and `[16,16)` as two distinct extents (no coalescing).\n\nChecks:\n- Targeted test: **1 passed in 0.06s**\n- Full command also ran, but repository-wide collection fails on pre-existing missing optional deps (`numpy`, `cuda.bindings`) in unrelated tests; no failures from the new test.\n- No existing files edited; no Workspaces left mounted.\n\nFinal LayerFS Commit: `1243995ca156bc9326fcd4a21a1640effc251bb6f6ff21fb5867d4453899341879` on Branch `agent-4cc1ccd9-695`."
+      }
+    ],
+    "validation": {
+      "branch": "real-development-merged-3",
+      "workspace": {
+        "sandbox": "1",
+        "path": "/workspaces/12",
+        "image": "sha256:edf2c7f96a2c3eb93bf70e0c2b084619127aa5ec865035f8c5e9d550ab5e3700"
+      },
+      "command": {
+        "kind": "exit:0",
+        "exitCode": 0,
+        "stdout": "......                                                                   [100%]\n6 passed in 0.10s\n",
+        "stderr": "",
+        "message": "Pi command",
+        "truncated": false,
+        "stdoutBytes": 98,
+        "stderrBytes": 0,
+        "timedOut": false,
+        "stdoutTruncated": false,
+        "stderrTruncated": false
+      },
+      "commit": {
+        "kind": "UpToDate",
+        "head": "1259515a37ae067040ad2fac21cb9c1c181a1759770937f09f394f9ff1979dbdb4",
+        "root": "257cfaea0c8369ce5d94b60eb01b91e8e108495502f00778f51c9a061d084718",
+        "merged": null,
+        "lww": [],
+        "lwwTruncated": false
+      },
+      "cancelled": false,
+      "errors": []
+    },
+    "seconds": 22.864,
+    "branch": "real-development-merged-3",
+    "note": "Actual LLM acceptance, excluded from deterministic performance measurements"
+  },
+  "checks": {
+    "typecheck": "passed",
+    "lint": "passed",
+    "build": "passed",
+    "unitTests": 43,
+    "lspChangedTypeScript": "0 errors",
+    "originalGitDirectoryMtime": "Final git status changed only .git directory mtime through lock creation/removal; original mtime restored under an exact-current-value guard and full manifest revalidated identical. Index and all file contents were unchanged.",
+    "originalFingerprint": "identical before and after"
+  },
+  "retained": {
+    "sourceVolume": "pi-layerfs-kernelbench-hsok3zhe-v3",
+    "fullVolume": "pi-layerfs-kernelbench-hsok3zhe-v6",
+    "artifacts": "/tmp/pi-layerfs-kernelagentir-HSOK3zhe",
+    "removedPreflightVolumes": [
+      "pi-layerfs-kernelbench-hsok3zhe",
+      "pi-layerfs-kernelbench-hsok3zhe-v2",
+      "pi-layerfs-kernelbench-hsok3zhe-v4",
+      "pi-layerfs-kernelbench-hsok3zhe-v5"
+    ],
+    "hardlinkCacheRemoved": true,
+    "modelBridgeStopped": true
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "project": "my-project",
+  "branch": "pi-work",
+  "initialize": false,
+  "failWhenUnavailable": true,
+  "timeoutSeconds": 60,
+  "logLevel": "error"
+}
