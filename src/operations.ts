@@ -325,6 +325,11 @@ export class Operations {
         const id = workspaceKey(ws);
         r.owned.set(id, ws);
         r.persistent.add(id);
+        await r.leases?.hold(ws, {
+          branch,
+          agent: String(r.options.agent),
+          retained: true,
+        });
         await this.record({ method: "workspace.mount", workspace: ws });
         return { id, ...ws };
       }
@@ -380,6 +385,7 @@ export class Operations {
           r.owned.delete(id);
           r.persistent.delete(id);
           r.processes.clear();
+          await r.leases?.release(ws).catch(() => undefined);
           return result;
         }
         case "overlay":
@@ -408,6 +414,11 @@ export class Operations {
           String(required(a.command)),
         ]);
         r.processes.add(String(value.process));
+        // Background processes have no timeout; an orphan's are cancelled
+        // when its Workspace is discarded.
+        await r.leases?.update(ws, (lease) => {
+          lease.processes.push(String(value.process));
+        });
         await this.record({
           method: "process.start",
           workspace: ws,
@@ -423,6 +434,10 @@ export class Operations {
           id,
         ]);
         r.processes.delete(id);
+        for (const ws of r.owned.values())
+          await r.leases?.update(ws, (lease) => {
+            lease.processes = lease.processes.filter((p) => p !== id);
+          });
         return value;
       }
       throw new Error("Unknown process action");

@@ -26,7 +26,23 @@ done
 if [[ $# == 0 ]]; then echo 'Pass a client command, e.g. npm run test:integration' >&2; exit 1; fi
 tty_flags=(-i)
 if [[ -t 0 && -t 1 ]]; then tty_flags+=(-t); fi
-exec docker run --rm "${tty_flags[@]}" --network host "${extra_mounts[@]}" \
+# Same networking choice as bin/pi-layerfs; see its notes on bridge mode.
+network=${PI_LAYERFS_NETWORK:-host}
+networking=(--network "$network")
+if [[ "$network" == bridge ]]; then
+  networking+=(-p 127.0.0.1::47681 -e PI_LAYERFS_DASHBOARD_LISTEN=0.0.0.0:47681
+    -e "LAYERFS_DAEMON_HOST=${LAYERFS_DAEMON_HOST:-host.docker.internal}")
+fi
+if [[ $(uname -s) != Linux ]]; then
+  # Host node_modules hold macOS binaries (esbuild); the client gets its own
+  # Linux dependency tree in a volume layered over the read-only checkout.
+  modules="pi-layerfs-$PI_LAYERFS_INSTANCE-node-modules"
+  extra_mounts+=(-v "$modules:$PI_LAYERFS_PLUGIN/node_modules")
+  docker run --rm -v "$PI_LAYERFS_PLUGIN:$PI_LAYERFS_PLUGIN:ro" -v "$modules:$PI_LAYERFS_PLUGIN/node_modules" \
+    -w "$PI_LAYERFS_PLUGIN" --entrypoint bash "$LAYERFS_IMAGE" -c \
+    'cmp -s package-lock.json node_modules/.pi-layerfs-lock || { npm ci --no-audit --no-fund --ignore-scripts >&2 && cp package-lock.json node_modules/.pi-layerfs-lock; }'
+fi
+exec docker run --rm "${tty_flags[@]}" "${networking[@]}" ${extra_mounts[@]+"${extra_mounts[@]}"} \
   --label "pi-layerfs.instance=$PI_LAYERFS_INSTANCE" \
   -v "$PI_LAYERFS_UPSTREAM:$PI_LAYERFS_UPSTREAM:ro" \
   -v "$PI_LAYERFS_PLUGIN:$PI_LAYERFS_PLUGIN:ro" \

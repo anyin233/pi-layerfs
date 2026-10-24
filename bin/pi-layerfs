@@ -22,18 +22,40 @@ Usage: pi-layerfs [--project DIR] [--state DIR] [Pi options/prompts]
 Each project gets its own Store volume. Host projects are mounted read-only.
 Model credentials and Pi settings share a private control volume outside all
 projects. Use Pi's /login to sign in. --self-test needs no model credentials.
+On macOS, Docker runs in the OrbStack or Docker Desktop VM. Networking is host
+mode; PI_LAYERFS_NETWORK=bridge is for Engines without host networking.
 Install the complete release bundle before starting this launcher.
 HELP
       exit 0 ;;
     *) break ;;
   esac
 done
-[[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || { echo 'This release requires Linux x86_64.' >&2; exit 1; }
+host_os=$(uname -s)
+[[ "$host_os" == Linux || "$host_os" == Darwin ]] || { echo 'pi-layerfs requires Linux, or macOS with OrbStack or Docker Desktop.' >&2; exit 1; }
+hash12() {
+  if command -v sha256sum >/dev/null 2>&1; then sha256sum; else shasum -a 256; fi | cut -c1-12
+}
 [[ -f "$state_dir/deployment.env" ]] || { echo "No deployment at $state_dir. Run the release bundle's install.sh first." >&2; exit 1; }
 # Generated locally by install.sh in a private 0700 directory.
 source "$state_dir/deployment.env"
-[[ -c /dev/fuse ]] || { echo '/dev/fuse is unavailable.' >&2; exit 1; }
-docker image inspect "$LAYERFS_IMAGE" >/dev/null
+engine_arch=$(docker version --format '{{.Server.Arch}}' 2>/dev/null) || {
+  echo 'The Docker Engine is not reachable. Start Docker (on macOS, OrbStack or Docker Desktop) and retry.' >&2; exit 1; }
+image_arch=$(docker image inspect --format '{{.Architecture}}' "$LAYERFS_IMAGE" 2>/dev/null) || {
+  echo "Runtime image $LAYERFS_IMAGE is missing from this Engine; rerun the release bundle's install.sh." >&2; exit 1; }
+[[ "$image_arch" == "$engine_arch" ]] || { echo "Runtime image is $image_arch but the Docker Engine runs $engine_arch; install the matching release." >&2; exit 1; }
+# Linux hosts share their kernel with Docker. On macOS the Engine's Linux VM
+# supplies FUSE, so its /dev/fuse is checked in the setup container below.
+# Host networking joins the Engine host's (on macOS, the VM's) namespace, where
+# each daemon publishes its port on 127.0.0.1. OrbStack forwards that loopback
+# to macOS for the dashboard; Docker Desktop needs its host networking setting.
+# Bridge mode dials daemons through host.docker.internal instead. OrbStack
+# forwards those ports asynchronously and the SDK connects once, so a fresh
+# Sandbox can be refused there; bridge is for Engines without host networking.
+network=${PI_LAYERFS_NETWORK:-host}
+[[ "$network" == host || "$network" == bridge ]] || { echo 'PI_LAYERFS_NETWORK must be host or bridge.' >&2; exit 1; }
+if [[ "$host_os" == Linux ]]; then
+  [[ -c /dev/fuse ]] || { echo '/dev/fuse is unavailable.' >&2; exit 1; }
+fi
 project_dir=$(realpath -- "$project_dir")
 control_volume=${PI_LAYERFS_CONTROL_VOLUME:-$LAYERFS_VOLUME}
 if [[ "$mode" == test ]]; then
@@ -41,7 +63,7 @@ if [[ "$mode" == test ]]; then
 elif $manage; then
   identity=manage
 else
-  identity=$(printf '%s' "$project_dir" | sha256sum | cut -c1-12)
+  identity=$(printf '%s' "$project_dir" | hash12)
 fi
 if ! $manage; then
   LAYERFS_VOLUME="pi-layerfs-$PI_LAYERFS_INSTANCE-$identity"
@@ -54,7 +76,9 @@ if docker volume inspect "$LAYERFS_VOLUME" >/dev/null 2>&1; then
 else
   docker volume create --label "pi-layerfs.instance=$PI_LAYERFS_INSTANCE" --label "pi-layerfs.project-key=$identity" "$LAYERFS_VOLUME" >/dev/null
 fi
-docker run --rm -v "$LAYERFS_VOLUME:/layerfs-store" --entrypoint bash "$LAYERFS_IMAGE" -c 'mkdir -p /layerfs-store/home; chmod 700 /layerfs-store/home'
+docker run --rm --device /dev/fuse -v "$LAYERFS_VOLUME:/layerfs-store" --entrypoint bash "$LAYERFS_IMAGE" \
+  -c 'test -c /dev/fuse || { echo "The Docker Engine provides no /dev/fuse." >&2; exit 1; }; mkdir -p /layerfs-store/home; chmod 700 /layerfs-store/home' \
+  || { echo 'Docker setup failed; LayerFS needs FUSE in the Engine kernel (/dev/fuse).' >&2; exit 1; }
 mounts=(-v "$LAYERFS_VOLUME:/layerfs-store" -v "$control_volume:/pi-control" -v "$LAYERFS_DOCKER:$LAYERFS_DOCKER")
 if [[ "$mode" != test ]]; then mounts+=(-v "$project_dir:$project_dir:ro"); fi
 if $manage; then
@@ -76,7 +100,14 @@ else
   if $manage; then command+=(--layerfs-manage); fi
   command+=("$@")
 fi
-launch=(docker run --rm "${terminal[@]}" --network host "${mounts[@]}"
+networking=(--network "$network")
+if [[ "$network" == bridge ]]; then
+  # The dashboard listens on the container interface; Docker publishes it on
+  # the host's loopback only, and the plugin reads the assigned host port.
+  networking+=(-p 127.0.0.1::47681 -e PI_LAYERFS_DASHBOARD_LISTEN=0.0.0.0:47681
+    -e "LAYERFS_DAEMON_HOST=${LAYERFS_DAEMON_HOST:-host.docker.internal}")
+fi
+launch=(docker run --rm "${terminal[@]}" "${networking[@]}" "${mounts[@]}"
   --label "pi-layerfs.instance=$PI_LAYERFS_INSTANCE"
   -e LAYERFS_HOME -e LAYERFS_DOCKER -e LAYERFS_IMAGE -e LAYERFS_VOLUME
   -e LAYERFS_DAEMON -e LAYERFS_NATIVE -e LAYERFS_STORE_PATH -e LAYERFS_CONTAINER_PREFIX

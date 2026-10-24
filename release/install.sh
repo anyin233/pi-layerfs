@@ -16,22 +16,36 @@ while [[ $# -gt 0 ]]; do
     *) echo "Unknown installer option: $1" >&2; exit 1 ;;
   esac
 done
-[[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || { echo 'Requires Linux x86_64.' >&2; exit 1; }
-[[ -c /dev/fuse ]] || { echo '/dev/fuse is unavailable; enable FUSE on this Linux host.' >&2; exit 1; }
+host_os=$(uname -s)
+[[ "$host_os" == Linux || "$host_os" == Darwin ]] || { echo 'Requires Linux, or macOS with OrbStack or Docker Desktop.' >&2; exit 1; }
+# On macOS the Engine's Linux VM supplies FUSE; it is checked in Docker below.
+if [[ "$host_os" == Linux ]]; then
+  [[ -c /dev/fuse ]] || { echo '/dev/fuse is unavailable; enable FUSE on this Linux host.' >&2; exit 1; }
+fi
 command -v docker >/dev/null
-command -v sha256sum >/dev/null
-docker version --format '{{.Server.Version}}' >/dev/null
-(cd -- "$bundle" && sha256sum --strict -c SHA256SUMS)
+sha256() {
+  if command -v sha256sum >/dev/null 2>&1; then sha256sum -- "$1"; else shasum -a 256 -- "$1"; fi | cut -d' ' -f1
+}
+engine_arch=$(docker version --format '{{.Server.Arch}}' 2>/dev/null) || {
+  echo 'The Docker Engine is not reachable. Start Docker (on macOS, OrbStack or Docker Desktop) and retry.' >&2; exit 1; }
+while read -r sum name; do
+  [[ "$sum" =~ ^[a-f0-9]{64}$ && "$name" =~ ^[A-Za-z0-9._-]+$ ]] || { echo 'Malformed SHA256SUMS.' >&2; exit 1; }
+  [[ $(sha256 "$bundle/$name") == "$sum" ]] || { echo "Checksum mismatch: $name" >&2; exit 1; }
+  echo "$name: OK"
+done < "$bundle/SHA256SUMS"
 image=$(<"$bundle/IMAGE_ID")
 [[ "$image" =~ ^sha256:[a-f0-9]{64}$ ]] || { echo 'Invalid bundled image identity.' >&2; exit 1; }
 if ! docker image inspect "$image" >/dev/null 2>&1; then
   gzip -dc -- "$bundle/runtime-image.tar.gz" | docker load
 fi
-docker image inspect "$image" >/dev/null
+image_arch=$(docker image inspect --format '{{.Architecture}}' "$image")
+[[ "$image_arch" == "$engine_arch" ]] || { echo "This bundle is for $image_arch, but the Docker Engine runs $engine_arch; use the matching release archive." >&2; exit 1; }
+docker run --rm --device /dev/fuse --entrypoint test "$image" -c /dev/fuse \
+  || { echo 'The Docker Engine provides no usable /dev/fuse; LayerFS needs FUSE in its Linux kernel.' >&2; exit 1; }
 mkdir -p -- "$prefix" "$bin_dir"
 prefix=$(realpath -- "$prefix")
 bin_dir=$(realpath -- "$bin_dir")
-chmod 700 -- "$prefix"
+chmod 700 "$prefix"
 if [[ -e "$prefix/package" && ! -f "$prefix/.pi-layerfs-installation" ]]; then
   echo "Refusing to replace an unrecognized $prefix/package" >&2; exit 1
 fi
@@ -47,8 +61,8 @@ if [[ -e "$prefix/package" ]]; then
 fi
 mv -- "$stage/package" "$prefix/package"
 mkdir -p -- "$prefix/state"
-chmod 700 -- "$prefix/state"
-instance=$(printf '%s' "$prefix" | sha256sum | cut -c1-12)
+chmod 700 "$prefix/state"
+instance=$(printf '%s' "$prefix" | { if command -v sha256sum >/dev/null 2>&1; then sha256sum; else shasum -a 256; fi; } | cut -c1-12)
 volume="pi-layerfs-$instance-store"
 if docker volume inspect "$volume" >/dev/null 2>&1; then
   owner=$(docker volume inspect --format '{{index .Labels "pi-layerfs.instance"}}' "$volume")
@@ -69,14 +83,14 @@ docker run --rm -v "$volume:/layerfs-store" --entrypoint bash "$image" -c 'mkdir
   printf 'export LAYERFS_CONTAINER_PREFIX=%q\n' "pi-lfs-$instance-"
   printf 'export PI_LAYERFS_INSTANCE=%q\n' "$instance"
 } > "$prefix/state/deployment.env"
-chmod 600 -- "$prefix/state/deployment.env"
+chmod 600 "$prefix/state/deployment.env"
 printf '%s\n' pi-layerfs > "$prefix/.pi-layerfs-installation"
-chmod +x -- "$prefix/package/bin/pi-layerfs"
+chmod +x "$prefix/package/bin/pi-layerfs"
 {
   printf '#!/usr/bin/env bash\n'
   printf 'exec %q "$@"\n' "$prefix/package/bin/pi-layerfs"
 } > "$bin_dir/pi-layerfs"
-chmod +x -- "$bin_dir/pi-layerfs"
+chmod +x "$bin_dir/pi-layerfs"
 if $register && command -v pi >/dev/null 2>&1; then
   PI_OFFLINE=1 pi install "$prefix/package"
 fi

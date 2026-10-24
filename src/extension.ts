@@ -354,10 +354,11 @@ export default function layerfsExtension(
   );
   tool(
     "layerfs_cleanup",
-    "Cancel owned background processes and discard/unmount owned Workspaces; report cleanup failures.",
-    Type.Object({}),
-    async () => {
+    "Cancel owned background processes and discard/unmount owned Workspaces; report cleanup failures. orphans:true also discards retained Workspaces of dead sessions listed in layerfs_status recovery.orphaned, cancelling their processes; their uncommitted changes are lost.",
+    Type.Object({ orphans: Type.Optional(Type.Boolean()) }),
+    async (args) => {
       await get().cleanup();
+      if (args.orphans) await get().discardOrphans();
       return get().status();
     },
   );

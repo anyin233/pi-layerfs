@@ -9,7 +9,10 @@ permissions:
   contents: read
 jobs:
   source:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,6 +27,8 @@ jobs:
       - name: Validate launch and build scripts
         run: |
           bash -n bin/pi-layerfs release/install.sh scripts/build-native.sh scripts/client.sh scripts/prepare.sh
+          # macOS ships Bash 3.2 as /bin/bash; the launcher must parse there too.
+          /bin/bash -n bin/pi-layerfs release/install.sh scripts/build-native.sh scripts/client.sh scripts/prepare.sh
           for file in scripts/*.mjs; do node --check "$file"; done
   distribution:
     if: github.event_name == 'workflow_dispatch'

@@ -6,7 +6,9 @@ Qualified against **Pi 1.4.0** and LayerFS revision **`1aa56ece78e2ecd71b46cf070
 
 ## Install the self-contained release
 
-The **Linux x86_64** release includes the plugin, pinned LayerFS SDK, native binding, daemon, Pi 1.4.0 and a complete Docker runtime image. Installing the archive performs **no network downloads** and needs no host Rust, Node, npm, private SDK package or LayerFS checkout. Linux with `/dev/fuse`, Docker Engine access through its Unix socket, Bash/coreutils/tar/gzip and plain local Docker volumes on **ext4, xfs or btrfs** are required. Model credentials are configured separately.
+Each release archive includes the plugin, pinned LayerFS SDK, native binding, daemon, Pi 1.4.0 and a complete Docker runtime image for one Engine architecture: `linux-x64` (Linux x86_64, Intel Macs) or `linux-arm64` (Linux arm64, Apple Silicon). Installing the archive performs **no network downloads** and needs no host Rust, Node, npm, private SDK package or LayerFS checkout. A Docker Engine reached through its Unix socket, `/dev/fuse` in the Engine's Linux kernel, Bash/tar/gzip and plain local Docker volumes on **ext4, xfs or btrfs** are required. Model credentials are configured separately.
+
+**macOS** is supported through OrbStack or Docker Desktop, whose Linux VM provides FUSE and the volume filesystem. See [macOS](docs/macos.md) for building the arm64 archive, networking and dashboard notes, and the measured disk savings.
 
 Download the full archive and checksums from [GitHub Releases](https://github.com/anyin233/pi-layerfs/releases/latest):
 
@@ -130,7 +132,7 @@ Use `layerfs_workspace` for state retained between commands and `layerfs_process
 | `timeoutSeconds` | `60` | Positive command bound, maximum 86400; tool timeout can shorten it |
 | `logLevel` | `error` | `silent`, `error`, or `info` lifecycle notifications |
 
-Required deployment settings are `LAYERFS_HOME`, `LAYERFS_IMAGE`, `LAYERFS_VOLUME`, `LAYERFS_DAEMON` and `LAYERFS_STORE_PATH`. The Store path must be `<volume-root>/global/store.sqlite`; mount identity and its ext4/xfs/btrfs filesystem are checked. `LAYERFS_DOCKER` defaults to `/var/run/docker.sock`. Preparation also exports `LAYERFS_NATIVE` and an instance-specific `LAYERFS_CONTAINER_PREFIX`; optional `LAYERFS_DAEMON_HOST` defaults to `127.0.0.1`. Documented `DSH_LAYERFS_*` fallbacks are accepted. Change deployment settings in a fresh runtime.
+Required deployment settings are `LAYERFS_HOME`, `LAYERFS_IMAGE`, `LAYERFS_VOLUME`, `LAYERFS_DAEMON` and `LAYERFS_STORE_PATH`. The Store path must be `<volume-root>/global/store.sqlite`; mount identity and its ext4/xfs/btrfs filesystem are checked, including VM Engines whose data root is a subvolume. `LAYERFS_DOCKER` defaults to `/var/run/docker.sock`. Preparation also exports `LAYERFS_NATIVE` and an instance-specific `LAYERFS_CONTAINER_PREFIX`; optional `LAYERFS_DAEMON_HOST` defaults to `127.0.0.1`. The launcher uses host networking; `PI_LAYERFS_NETWORK=bridge` dials daemons through `host.docker.internal` and publishes the dashboard on the host loopback instead (see [macOS](docs/macos.md#networking)). Documented `DSH_LAYERFS_*` fallbacks are accepted. Change deployment settings in a fresh runtime.
 
 The management launcher explicitly mounts the Docker volume directory and sets `PI_LAYERFS_VOLUME_ROOT`; `PI_LAYERFS_INSTANCE` separates deployment ownership labels. It defaults `UV_THREADPOOL_SIZE` to 64, which can be overridden when launching the client. Model credentials, project data and SDK/daemon control paths are distinct.
 
@@ -138,6 +140,7 @@ Private state under `LAYERFS_HOME` includes:
 
 - `pi-bindings/<project>.json`: canonical source, Store and immutable recorded genesis; directory lock/intent for initialization.
 - `pi-projects/`: project registry and asynchronous import jobs, with ownership and removal admission locks.
+- `pi-leases/<project>/`: holder records of currently mounted Workspaces, used to recover those of dead sessions.
 - `pi-traces/<project>/<volume-hash>/`: native SDK call traces, actor records and lifecycle/tool/text journals. Recreating a project name with a new volume does not mix old journals into its views.
 
 Tracing is enabled by the plugin. Native traces summarize file payloads, but command text/output and recorded model text can contain user data; protect the private state and session journals accordingly. Dashboard authentication persists in that browser tab's session storage and is process-specific. Host/Origin checks, CSP and text-node rendering apply. The dashboard has the Pi process's authority; it is not a separate security boundary.
@@ -148,17 +151,17 @@ Initialization is once per source/Store binding. `main` begins at L0; after publ
 
 Pi's known hashline mutators (`replace`, `replace_match`, `insert`, `copy`, `move`, `undo_last_change`) and `powershell` are blocked through `tool_call`. Other extensions, unregistered tools and direct host APIs can bypass this integration. A Workspace is not a security sandbox. File tools preserve only metadata supported by the SDK; use Workspace commands for other supported filesystem work.
 
-Foreground `workspace.exec` has no public AbortSignal or foreground process handle. Cancellation is deferred until execution/GNU timeout returns, with a 2-second TERM-to-KILL grace. An abort after commit begins cannot roll it back. Do not daemonize through ordinary Bash; use the process tool. A transport failure or forced Pi kill can leave a Workspace for manual operator inspection. Cleanup adopts no other session's mounts, and interrupted workers are not automatically replayed.
+Foreground `workspace.exec` has no public AbortSignal or foreground process handle. Cancellation is deferred until execution/GNU timeout returns, with a 2-second TERM-to-KILL grace. An abort after commit begins cannot roll it back. Do not daemonize through ordinary Bash; use the process tool. A transport failure or forced Pi kill leaves its Workspace mounted in the shared Sandbox. Each mount therefore records a lease (holder container, pid, command deadline). The next session's initialization, under the initialization lock, discards Workspaces of ordinary commands whose holder is gone, as their timeout or cancellation would have done; a Workspace still `Busy` with the dead session's command is retried once that command's own timeout has ended. Retained Workspaces of dead holders hold explicit uncommitted work: they appear in `layerfs_status` `recovery.orphaned` and are discarded, with their background processes cancelled, only by `layerfs_cleanup {orphans:true}`. Live holders and Workspaces without a lease are never touched, and interrupted workers are not automatically replayed.
 
 SDK snapshots, comparisons and storage diagnostics have explicit bounds. History pages use UTF-8-safe byte cursors and retain incomplete appends. Interactive full-history loading is capped at 100000 calls, and terminal rendering at 500 calls around the cursor; full journals remain on disk. Playback shows recorded activity, not a simulated re-execution or a PTY. Missing traces remain unattributed, and old saved nodes beyond the native snapshot bounds can be unavailable. SDK file revision diagnostics currently bound revision scans to 1000; unavailable per-file physical attribution is left null.
 
 Initialization/removal locks have no automatic stale takeover. After a crash, inspect the binding/intent, project entry, Docker volume labels, native snapshot and running processes before manual reconciliation. Unknown imports and failed cleanup retain evidence. Do not delete a Store merely because a reply was lost. A missing or replaced volume, incomplete intent, unrecognized project or missing genesis is reported rather than silently adopted.
 
-For build failures check the locked Cargo cache and `fuse3` headers. For daemon launch failures check `/dev/fuse`, the immutable local image, plain volume, socket and runtime glibc. `scripts/prepare.sh` uses Bookworm builds specifically to avoid host/runtime glibc mismatches. Use `layerfs_status`, `layerfs_inspect` and the preserved phase errors before recovery.
+For build failures check the locked Cargo cache in `.build/cargo-home`; native builds run in the pinned `rust:1.85.1-bookworm` container for the Engine's architecture, which also avoids host/runtime glibc mismatches. For daemon launch failures check `/dev/fuse` in the Engine, the immutable local image, plain volume, socket and image/Engine architecture. Use `layerfs_status`, `layerfs_inspect` and the preserved phase errors before recovery.
 
 ## Build from source
 
-Source builds require Node 22.19+, Rust **1.85.1**, Git and Docker. This is a build-time requirement; release users do not need these compilers. The upstream source is public MIT and locked to the qualified revision.
+Source builds require Node 22.19+, Git and Docker, on Linux or macOS. Rust **1.85.1** runs in its pinned builder container, so no host toolchain is needed; native artifacts and the image target the Docker Engine's architecture (`PI_LAYERFS_PLATFORM=linux/amd64|linux/arm64` overrides it). The upstream source is public MIT and locked to the qualified revision.
 
 ```bash
 npm ci
@@ -169,7 +172,7 @@ npm run release:build
 
 The builder fetches the pinned LayerFS source into ignored `.build/`, builds the native addon/daemon in `rust:1.85.1-bookworm`, collects licenses for all locked Rust packages, builds the runtime image and creates versioned archives plus `SHA256SUMS` under `release-out/`. It audits the actual npm tarball and loads it from a clean directory without local `node_modules`. To reuse an already qualified Bookworm build, pass `npm run release:build -- --upstream /path/to/qualified/layerfs`.
 
-For development against an existing checkout, the original `scripts/prepare.sh` and `scripts/client.sh` remain available. They are optional developer tools, not release installation requirements.
+For development against an existing checkout, `scripts/prepare.sh` and `scripts/client.sh` remain available, e.g. `bash scripts/prepare.sh "$PWD/.build/layerfs"` then `bash scripts/client.sh .layerfs-local/env.sh npm run test:integration`. On macOS the client keeps a Linux `node_modules` in its own volume. They are optional developer tools, not release installation requirements.
 
 ## Verification
 

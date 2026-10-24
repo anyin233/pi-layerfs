@@ -1,5 +1,13 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -12,6 +20,7 @@ import {
   validateEnvironment,
   verifyStoreMount,
 } from "../src/config.js";
+import { Leases } from "../src/leases.js";
 import {
   branchPath,
   OperationError,
@@ -165,7 +174,12 @@ test("host platform, Node and environment are validated without fallback", async
     for (const k of Object.keys(process.env))
       if (k.startsWith("LAYERFS_") || k.startsWith("DSH_LAYERFS_"))
         delete process.env[k];
-    await assert.rejects(validateEnvironment("/tmp"), /Missing LAYERFS_HOME/);
+    // The plugin itself always runs in the Linux container; a macOS developer
+    // host reaches the platform refusal first.
+    await assert.rejects(
+      validateEnvironment("/tmp"),
+      process.platform === "linux" ? /Missing LAYERFS_HOME/ : /requires Linux/,
+    );
   } finally {
     process.env = before;
   }
@@ -419,6 +433,34 @@ test("Store filesystem and Docker volume identity must match", () => {
       ),
     /Unsupported/,
   );
+  // OrbStack: Engine data root is the btrfs subvolume /docker.
+  const vm =
+    "1 0 0:38 / / rw - overlay overlay rw\n760 743 0:38 /docker/volumes/test/_data /layerfs-store rw,noatime master:69 - btrfs /dev/vdb1 rw,subvol=/docker";
+  assert.equal(
+    verifyStoreMount(
+      vm,
+      "/layerfs-store",
+      "/var/lib/docker/volumes/test/_data",
+    ),
+    "btrfs",
+  );
+  for (const other of [
+    "/var/lib/docker/volumes/other/_data",
+    "/var/lib/docker/volumes/xtest/_data",
+  ])
+    assert.throws(
+      () => verifyStoreMount(vm, "/layerfs-store", other),
+      /share one Store/,
+    );
+  assert.throws(
+    () =>
+      verifyStoreMount(
+        vm.replace("/docker/volumes/test/_data", "/_data"),
+        "/layerfs-store",
+        "/var/lib/docker/volumes/test/_data",
+      ),
+    /share one Store/,
+  );
 });
 test("cancel waits for exec completion before discard and cleanup", async () => {
   const f = await fixture();
@@ -557,6 +599,138 @@ test("independent configured branches do not share file updates", async () => {
     ]);
     assert.equal(((await a.files("read", { path: "x" })) as Value).text, "A");
     assert.equal(((await b.files("read", { path: "x" })) as Value).text, "B");
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test("ordinary commands hold a Workspace lease only while mounted", async () => {
+  const f = await fixture();
+  try {
+    const r = f.create();
+    await r.initialize();
+    const leases = join(f.home, "pi-leases", "test");
+    let during: string[] = [];
+    f.setExec(async () => {
+      during = await readdir(leases);
+      return { exitCode: 0, stdout: "", stderr: "" };
+    });
+    await r.bash("true");
+    assert.equal(during.length, 1);
+    assert.deepEqual(await readdir(leases), []);
+  } finally {
+    await f.cleanup();
+  }
+});
+test("startup reclaims dead sessions' command Workspaces and reports retained orphans", async () => {
+  const f = await fixture();
+  try {
+    const leases = new Leases(join(f.home, "pi-leases", "test"));
+    const dead = required(spawnSync("true").pid);
+    const ws = (name: string) => ({
+      sandbox: "1",
+      path: `/workspaces/${name}`,
+    });
+    const hold = async (name: string, retained: boolean, pid: number) => {
+      await leases.hold(ws(name), {
+        branch: "pi-work",
+        agent: "old",
+        retained,
+        seconds: retained ? undefined : 3,
+      });
+      await leases.update(ws(name), (lease) => {
+        lease.pid = pid;
+        lease.processes = retained ? ["proc_1"] : [];
+      });
+    };
+    await hold("command", false, dead);
+    await hold("retained", true, dead);
+    await hold("live", false, process.pid);
+    await hold("busy", false, dead);
+    await hold("stale", false, dead);
+    const cancelled: unknown[] = [];
+    const operator = {
+      inspect: {
+        // Another session mounts while this snapshot is taken.
+        snapshot: async () => {
+          await hold("fresh", false, process.pid);
+          return {
+            layers: [{ id: "L0-id" }],
+            sandboxes: [
+              {
+                id: "1",
+                workspaces: ["command", "retained", "live", "busy"].map(
+                  (n) => ({
+                    sandbox: "1",
+                    path: `/workspaces/${n}`,
+                  }),
+                ),
+              },
+            ],
+          };
+        },
+      },
+      process: {
+        list: async () => ({
+          items: [
+            {
+              id: "proc_2",
+              sandbox: "1",
+              path: "/workspaces/retained",
+              status: "running",
+            },
+            {
+              id: "proc_3",
+              sandbox: "1",
+              path: "/workspaces/live",
+              status: "running",
+            },
+          ],
+        }),
+        cancel: async (id: unknown) => {
+          cancelled.push(id);
+          return {};
+        },
+      },
+    };
+    f.sdk.workspace.unmount = async (w, discard) => {
+      f.events.push(`unmount:${w.path}:${discard}`);
+      if (w.path === "/workspaces/busy")
+        throw Object.assign(new Error("kernel busy"), { code: "Busy" });
+      return {};
+    };
+    const r = new Runtime(
+      f.root,
+      config,
+      f.sdk,
+      async () => ({ environment: {}, filesystem: "ext4" }),
+      { agent: "new", operator },
+    );
+    // Leases above predate this session's snapshot by at least a tick.
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await r.initialize();
+    assert.deepEqual(r.recovery.reclaimed, ["1:/workspaces/command"]);
+    assert.deepEqual(
+      r.recovery.orphaned.map((l) => l.path),
+      ["/workspaces/retained"],
+    );
+    assert.deepEqual(
+      r.recovery.pending.map((l) => l.path),
+      ["/workspaces/busy"],
+    );
+    assert.equal(await leases.read(ws("stale")), undefined);
+    assert.ok(await leases.read(ws("fresh")));
+    assert.ok(await leases.read(ws("live")));
+    assert.ok(!f.events.some((e) => e.includes("/workspaces/live")));
+    assert.ok(!f.events.some((e) => e.includes("/workspaces/retained")));
+    assert.deepEqual((await r.status()).recovery, r.recovery);
+    assert.deepEqual(await r.discardOrphans(), {
+      discarded: ["1:/workspaces/retained"],
+    });
+    assert.deepEqual(cancelled, ["proc_1", "proc_2"]);
+    assert.ok(f.events.includes("unmount:/workspaces/retained:true"));
+    assert.equal(await leases.read(ws("retained")), undefined);
+    await r.shutdown();
   } finally {
     await f.cleanup();
   }

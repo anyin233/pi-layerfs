@@ -64,6 +64,14 @@ const info = parseJSON(
   "package metadata",
 );
 assert.equal(info.version, (await readFile("VERSION", "utf8")).trim());
+// The image architecture follows the vendored native artifacts, which
+// build-native.sh produced for the Engine's (or PI_LAYERFS_PLATFORM's) arch.
+const { platform } = parseJSON(
+  await readFile("vendor/layerfs/ARTIFACTS.json", "utf8"),
+  "native artifact manifest",
+);
+assert.ok(["linux-x64", "linux-arm64"].includes(platform));
+const dockerPlatform = platform === "linux-x64" ? "linux/amd64" : "linux/arm64";
 const packed = parseJSON(
   await run(
     "npm",
@@ -74,12 +82,12 @@ const packed = parseJSON(
 );
 const plugin = join(out, packed[0].filename);
 await run(process.execPath, ["scripts/check-package.mjs", plugin]);
-const tag = `pi-layerfs:${info.version}-linux-x64`;
+const tag = `pi-layerfs:${info.version}-${platform}`;
 const sourceRevision = await run("git", ["rev-parse", "HEAD"], true);
 await run("docker", [
   "build",
   "--platform",
-  "linux/amd64",
+  dockerPlatform,
   "--label",
   `org.opencontainers.image.revision=${sourceRevision}`,
   "-f",
@@ -95,7 +103,7 @@ const image = await run(
 );
 assert.match(image, /^sha256:[a-f0-9]{64}$/);
 const stage = await mkdtemp(join(out, ".bundle-"));
-const name = `pi-layerfs-${info.version}-linux-x64`;
+const name = `pi-layerfs-${info.version}-${platform}`;
 const bundle = join(stage, name);
 await mkdir(bundle);
 for (const name of ["LICENSE", "THIRD_PARTY_NOTICES.md", "VERSION"])
@@ -113,15 +121,15 @@ await run("bash", [
 const manifest = {
   name: info.name,
   version: info.version,
-  platform: "linux-x64",
+  platform,
+  dockerPlatform,
   image,
   sourceRevision,
   layerfsRevision: "1aa56ece78e2ecd71b46cf07076100345df47239",
   piVersion: "1.4.0",
   externalRequirements: [
-    "Linux x86_64",
-    "Docker Engine with its Unix socket",
-    "/dev/fuse",
+    `Docker Engine for ${dockerPlatform} with its Unix socket: Linux host, or the OrbStack/Docker Desktop VM on macOS`,
+    "/dev/fuse in the Engine's Linux kernel",
     "plain local ext4/xfs/btrfs Docker volume",
   ],
   installDownloads: false,

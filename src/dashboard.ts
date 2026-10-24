@@ -1,12 +1,14 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
-import { createServer, type Server } from "node:http";
+import { createServer, type RequestListener, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
+import { hostname } from "node:os";
 import type { Control } from "./control.js";
 import { dashboardPage } from "./dashboard-page.js";
+import { docker } from "./docker.js";
 import { errorData, type Value } from "./runtime.js";
 
 export class Dashboard {
-  private server?: Server;
+  private servers: Server[] = [];
   private token = randomBytes(32).toString("hex");
   private port = 0;
   private requests = new Set<Promise<void>>();
@@ -18,9 +20,9 @@ export class Dashboard {
     return `http://127.0.0.1:${this.port}/#${this.token}`;
   }
   async start(port = 0) {
-    if (this.server) return this.url;
+    if (this.servers.length) return this.url;
     if (this.stopped) throw new Error("Dashboard has closed");
-    const server = createServer((req, res) => {
+    const handler: RequestListener = (req, res) => {
       const operation = (async () => {
         const json = (status: number, value: unknown) => {
           res.statusCode = status;
@@ -233,30 +235,78 @@ export class Dashboard {
         }
       })().finally(() => this.requests.delete(operation));
       this.requests.add(operation);
-    });
-    server.requestTimeout = 15000;
-    server.headersTimeout = 10000;
-    await new Promise<void>((resolve, reject) => {
-      server.once("error", reject);
-      server.listen(port, "127.0.0.1", () => {
-        server.removeListener("error", reject);
-        resolve();
+    };
+    const listen = async (port: number, address: string) => {
+      const server = createServer(handler);
+      server.requestTimeout = 15000;
+      server.headersTimeout = 10000;
+      await new Promise<void>((resolve, reject) => {
+        server.once("error", reject);
+        server.listen(port, address, () => {
+          server.removeListener("error", reject);
+          resolve();
+        });
       });
-    });
-    this.server = server;
-    this.port = (server.address() as AddressInfo).port;
-    server.unref();
+      server.unref();
+      this.servers.push(server);
+      return (server.address() as AddressInfo).port;
+    };
+    // Bridge-networked launches (PI_LAYERFS_NETWORK=bridge) set PI_LAYERFS_DASHBOARD_LISTEN
+    // to the container port that Docker publishes on the host's 127.0.0.1.
+    // The URL names the host port; it is also served on the container's own
+    // loopback so the same URL works from inside the container.
+    const configured = process.env.PI_LAYERFS_DASHBOARD_LISTEN;
+    const published = configured?.match(/^([0-9.]+):([0-9]{1,5})$/);
+    if (configured && !published)
+      throw new Error("PI_LAYERFS_DASHBOARD_LISTEN must be ADDRESS:PORT");
+    try {
+      if (published) {
+        await listen(Number(published[2]), published[1]);
+        this.port = await publishedPort(Number(published[2]));
+        if (this.port !== Number(published[2]))
+          await listen(this.port, "127.0.0.1");
+      } else this.port = await listen(port, "127.0.0.1");
+    } catch (error) {
+      await this.closeServers();
+      throw error;
+    }
     return this.url;
+  }
+  private async closeServers() {
+    const servers = this.servers;
+    this.servers = [];
+    await Promise.all(
+      servers.map(
+        (server) =>
+          new Promise<void>((resolve, reject) => {
+            server.close((e) => (e ? reject(e) : resolve()));
+            server.closeIdleConnections();
+          }),
+      ),
+    );
   }
   async close() {
     this.stopped = true;
-    const server = this.server;
-    this.server = undefined;
-    if (server)
-      await new Promise<void>((resolve, reject) => {
-        server.close((e) => (e ? reject(e) : resolve()));
-        server.closeIdleConnections();
-      });
+    await this.closeServers();
     await Promise.allSettled([...this.requests]);
   }
+}
+
+// The host side of a published port, read from this container's own record.
+async function publishedPort(containerPort: number) {
+  const container = await docker(
+    `/containers/${encodeURIComponent(hostname())}/json`,
+  );
+  const ports = (container.NetworkSettings as { Ports?: Value } | undefined)
+    ?.Ports?.[`${containerPort}/tcp`] as
+    | { HostIp?: string; HostPort?: string }[]
+    | null
+    | undefined;
+  const binding = ports?.find((p) => p.HostIp === "127.0.0.1");
+  const port = Number(binding?.HostPort);
+  if (!Number.isSafeInteger(port) || port < 1 || port > 65535)
+    throw new Error(
+      `Dashboard port ${containerPort} is not published on host 127.0.0.1`,
+    );
+  return port;
 }

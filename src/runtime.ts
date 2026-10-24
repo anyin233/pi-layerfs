@@ -19,6 +19,14 @@ import {
   validateEnvironment,
 } from "./config.js";
 import {
+  holderAlive,
+  type Lease,
+  Leases,
+  mountedWorkspaces,
+  ownerIdentity,
+  sameLease,
+} from "./leases.js";
+import {
   invoke,
   loadClient,
   type RuntimeOptions,
@@ -197,6 +205,16 @@ export class Runtime {
   readonly processes = new Set<string>();
   initial: string | null = null;
   diagnostics: unknown;
+  leases?: Leases;
+  // Workspaces left by dead sessions: reclaimed, reported, or awaiting the
+  // end of their command's own timeout.
+  recovery: {
+    reclaimed: string[];
+    orphaned: Lease[];
+    pending: Lease[];
+    errors: Value[];
+  } = { reclaimed: [], orphaned: [], pending: [], errors: [] };
+  private retry?: NodeJS.Timeout;
   constructor(
     readonly root: string,
     readonly config: Config,
@@ -227,6 +245,7 @@ export class Runtime {
     const env = { ...environment(), ...this.options.deployment };
     const home = required(env.HOME);
     const store = required(env.STORE_PATH);
+    this.leases = new Leases(join(home, "pi-leases", this.config.project));
     const bindings = join(home, "pi-bindings");
     await mkdir(bindings, { recursive: true, mode: 0o700 });
     const file = join(bindings, `${this.config.project}.json`);
@@ -306,12 +325,10 @@ export class Runtime {
       }
       const main = branches.find((b) => b.name === "main");
       const layers = new Set([binding.initial]);
+      let snapshot: Value | undefined;
+      const observed = Date.now();
       if (this.options.operator) {
-        const snapshot = await invoke(
-          this.options.operator,
-          "inspect",
-          "snapshot",
-        );
+        snapshot = await invoke(this.options.operator, "inspect", "snapshot");
         for (const layer of snapshot.layers as Value[])
           layers.add(String(layer.id));
         if (!(snapshot.layers as Value[]).some((l) => l.id === binding.initial))
@@ -327,9 +344,127 @@ export class Runtime {
       if (working && !layers.has(String(working.base)))
         throw new Error("Configured working branch has an unknown base Layer");
       if (!working) await this.sdk.branch.fork(this.config.branch, "main");
+      // Under the initialization lock, so concurrent sessions never reclaim
+      // the same Workspace twice.
+      if (snapshot) await this.reclaim(snapshot, observed);
     } finally {
       await rm(lock, { recursive: true });
     }
+  }
+  // Ordinary command Workspaces of dead holders are discarded, as their
+  // timeout/cancellation would have done. Retained Workspaces hold explicit
+  // uncommitted work: they are reported, and discarded only through
+  // discardOrphans. Live and unknown holders are never touched.
+  private async reclaim(snapshot: Value, observed: number) {
+    const leases = required(this.leases);
+    const mounted = mountedWorkspaces(snapshot);
+    const me = await ownerIdentity();
+    const recovery: Runtime["recovery"] = {
+      reclaimed: this.recovery.reclaimed,
+      orphaned: [],
+      pending: [],
+      errors: [],
+    };
+    for (const lease of await leases.list()) {
+      const key = `${lease.sandbox}:${lease.path}`;
+      try {
+        if (!mounted.has(key)) {
+          // Unmounted after its holder recorded it: nothing remains to free.
+          // A lease newer than the snapshot names a mount it cannot show.
+          if (
+            lease.time < observed &&
+            sameLease(await leases.read(lease), lease)
+          )
+            await leases.release(lease);
+          continue;
+        }
+        if (await holderAlive(lease, me)) continue;
+        if (lease.retained) {
+          recovery.orphaned.push(lease);
+          continue;
+        }
+        if (!sameLease(await leases.read(lease), lease)) continue;
+        await this.sdk.workspace.unmount(
+          { sandbox: lease.sandbox, path: lease.path },
+          true,
+        );
+        await leases.release(lease);
+        recovery.reclaimed.push(key);
+      } catch (e) {
+        // Busy: the dead session's command still runs until its timeout.
+        if (errorData(e).code === "Busy") recovery.pending.push(lease);
+        else recovery.errors.push({ workspace: key, ...errorData(e) });
+      }
+    }
+    this.recovery = recovery;
+    const due = Math.max(
+      0,
+      ...recovery.pending.map((l) => (l.deadline ?? 0) - Date.now()),
+    );
+    clearTimeout(this.retry);
+    this.retry = undefined;
+    if (recovery.pending.some((l) => l.deadline && l.deadline > Date.now()))
+      this.retry = setTimeout(() => {
+        this.retry = undefined;
+        this.serial(async () => {
+          if (this.stopped || !this.initialized) return;
+          const observed = Date.now();
+          await this.reclaim(
+            await invoke(this.options.operator, "inspect", "snapshot"),
+            observed,
+          );
+        }).catch((e) => {
+          this.recovery.errors.push({ phase: "reclaim", ...errorData(e) });
+        });
+      }, due + 1000).unref();
+  }
+  discardOrphans() {
+    return this.serial(async () => {
+      await this.active();
+      const leases = required(this.leases);
+      const discarded: string[] = [];
+      const errors: Value[] = [];
+      const running = this.recovery.orphaned.length
+        ? (((await invoke(this.options.operator, "process", "list")).items as
+            | Value[]
+            | undefined) ?? [])
+        : [];
+      for (const lease of this.recovery.orphaned) {
+        const key = `${lease.sandbox}:${lease.path}`;
+        try {
+          if (!sameLease(await leases.read(lease), lease)) continue;
+          // Recorded processes, plus any still running in that Workspace.
+          const ids = new Set(lease.processes);
+          for (const p of running)
+            if (
+              p.sandbox === lease.sandbox &&
+              p.path === lease.path &&
+              p.status === "running"
+            )
+              ids.add(String(p.id));
+          for (const id of ids)
+            await invoke(this.options.operator, "process", "cancel", [
+              id,
+            ]).catch((e) => {
+              if (errorData(e).code !== "NotFound") throw e;
+            });
+          await this.sdk.workspace.unmount(
+            { sandbox: lease.sandbox, path: lease.path },
+            true,
+          );
+          await leases.release(lease);
+          discarded.push(key);
+        } catch (e) {
+          errors.push({ workspace: key, ...errorData(e) });
+        }
+      }
+      this.recovery.orphaned = this.recovery.orphaned.filter(
+        (l) => !discarded.includes(`${l.sandbox}:${l.path}`),
+      );
+      if (errors.length)
+        throw new OperationError("discard orphans", errors, { discarded });
+      return { discarded };
+    });
   }
   private async active() {
     if (this.stopped) throw new Error("LayerFS runtime is shut down");
@@ -426,6 +561,12 @@ export class Runtime {
       try {
         ws = await this.sdk.workspace.mount(this.config.branch);
         this.owned.set(`${ws.sandbox}:${ws.path}`, ws);
+        await this.leases?.hold(ws, {
+          branch: this.config.branch,
+          agent: String(this.options.agent),
+          retained: false,
+          seconds,
+        });
         // Foreground SDK exec has no cancellation port. Wait for timeout+kill and
         // its confirmed result before touching the overlay. Never Promise.race it.
         const stdout = new Capture();
@@ -509,6 +650,8 @@ export class Runtime {
           try {
             await this.sdk.workspace.unmount(ws, !commit);
             this.owned.delete(`${ws.sandbox}:${ws.path}`);
+            // A lease left behind is removed by the next reclaim.
+            await this.leases?.release(ws).catch(() => undefined);
           } catch (e) {
             errors.push({ phase: "unmount", ...errorData(e) });
           }
@@ -546,6 +689,7 @@ export class Runtime {
         head,
         headError,
         mounted: [...this.owned.values()],
+        recovery: this.recovery,
         ready:
           this.initialized &&
           !this.stopped &&
@@ -581,6 +725,7 @@ export class Runtime {
           await this.sdk.workspace.unmount(ws, true);
           this.owned.delete(key);
           this.persistent.delete(key);
+          await this.leases?.release(ws).catch(() => undefined);
         } catch (e) {
           errors.push({ phase: "unmount", workspace: ws, ...errorData(e) });
         }
@@ -591,6 +736,7 @@ export class Runtime {
   async shutdown() {
     await this.serial(async () => {
       this.stopped = true;
+      clearTimeout(this.retry);
     });
     const errors: Value[] = [];
     try {

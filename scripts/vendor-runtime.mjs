@@ -24,6 +24,16 @@ function run(program, args) {
   assert.equal(result.status, 0, `${program}: ${result.stderr}`);
   return result.stdout.trim();
 }
+// Linux architecture of the builder container: x64 or arm64. As in
+// build-native.sh, it defaults to PI_LAYERFS_PLATFORM, else the Engine's.
+const arch =
+  process.argv[3] ??
+  { "linux/amd64": "x64", "linux/arm64": "arm64" }[
+    process.env.PI_LAYERFS_PLATFORM ||
+      `linux/${run("docker", ["version", "--format", "{{.Server.Arch}}"])}`
+  ];
+assert.ok(["x64", "arm64"].includes(arch), `Unsupported architecture ${arch}`);
+const target = `core/target/pi-bookworm-${arch}`;
 assert.equal(run("git", ["-C", source, "rev-parse", "HEAD"]), revision);
 assert.equal(
   run("git", ["-C", source, "status", "--porcelain", "--untracked-files=no"]),
@@ -32,11 +42,11 @@ assert.equal(
 );
 const destinations = [
   [
-    "core/target/pi-bookworm/release/layerfs-daemon",
+    `${target}/release/layerfs-daemon`,
     "vendor/layerfs/bin/layerfs-daemon",
   ],
   [
-    "core/target/pi-bookworm/layerfs.node",
+    `${target}/layerfs.node`,
     "vendor/layerfs/sdk/js/native/layerfs.node",
   ],
 ];
@@ -56,24 +66,22 @@ for (const [from, to] of destinations) {
   });
 }
 // Cargo's locked metadata names the complete dependency set, including its
-// locally patched fuser crate. Preserve license texts, not registry credentials.
+// locally patched fuser crate. build-native.sh records it inside the builder
+// container; its /work and /cargo paths map back to the host checkout and the
+// adjacent Cargo home. Preserve license texts, not registry credentials.
 let metadata;
 try {
   metadata = JSON.parse(
-    run("cargo", [
-      "+1.85.1",
-      "metadata",
-      "--manifest-path",
-      join(source, "core/Cargo.toml"),
-      "--format-version",
-      "1",
-      "--locked",
-      "--offline",
-    ]),
+    await readFile(join(source, target, "cargo-metadata.json"), "utf8"),
   );
 } catch (cause) {
   throw new Error("Cannot read locked Cargo dependency metadata", { cause });
 }
+const cargoHome = join(dirname(source), "cargo-home");
+for (const pkg of metadata.packages)
+  pkg.manifest_path = pkg.manifest_path
+    .replace(/^\/work\//, `${source}/`)
+    .replace(/^\/cargo\//, `${cargoHome}/`);
 const licensesRoot = join(root, "vendor/layerfs/licenses");
 await mkdir(licensesRoot, { recursive: true });
 const index = [];
@@ -139,8 +147,7 @@ for (const pkg of metadata.packages) {
     licenseFiles: names,
   });
 }
-const sysroot = run("rustc", ["+1.85.1", "--print", "sysroot"]);
-const rustLicense = join(sysroot, "share/doc/rust");
+const rustLicense = join(source, target, "rust-licenses");
 for (const name of ["COPYRIGHT", "LICENSE-APACHE", "LICENSE-MIT"]) {
   await copyFile(
     join(rustLicense, name),
@@ -153,7 +160,7 @@ await writeFile(
 );
 await writeFile(
   join(root, "vendor/layerfs/ARTIFACTS.json"),
-  `${JSON.stringify({ upstream: revision, platform: "linux-x64", build: "Rust 1.85.1 / Debian Bookworm", glibcMinimum: "2.36", artifacts, rustDependencies: index.length }, null, 2)}\n`,
+  `${JSON.stringify({ upstream: revision, platform: `linux-${arch}`, build: "Rust 1.85.1 / Debian Bookworm", glibcMinimum: "2.36", artifacts, rustDependencies: index.length }, null, 2)}\n`,
 );
 console.log(
   JSON.stringify({
