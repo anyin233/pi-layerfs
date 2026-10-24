@@ -8,6 +8,8 @@ Qualified against **Pi 1.4.0** and LayerFS revision **`1aa56ece78e2ecd71b46cf070
 
 The **Linux x86_64** release includes the plugin, pinned LayerFS SDK, native binding, daemon, Pi 1.4.0 and a complete Docker runtime image. Installing the archive performs **no network downloads** and needs no host Rust, Node, npm, private SDK package or LayerFS checkout. Linux with `/dev/fuse`, Docker Engine access through its Unix socket, Bash/coreutils/tar/gzip and plain local Docker volumes on **ext4, xfs or btrfs** are required. Model credentials are configured separately.
 
+A macOS candidate is built from the same Linux runtime for Intel and Apple Silicon through Docker's `linux/amd64` emulation. It uses the Docker VM's `/dev/fuse`, local Unix socket and host networking; macOS itself does not need macFUSE, Node, Rust or a separate LayerFS checkout. The macOS archive is not part of the v0.1.0 release yet. See [macOS deployment](docs/macos.md) for Docker Desktop/Colima requirements and the real-host acceptance procedure.
+
 Download the full archive and checksums from [GitHub Releases](https://github.com/anyin233/pi-layerfs/releases/latest):
 
 ```bash
@@ -79,9 +81,9 @@ Commands:
 /layerfs minimalist          keep Bash and LayerFS workflow tools
 ```
 
-Project initialization is asynchronous. Inspect its job ID or dashboard progress. The preliminary metadata scan counts ignored entries and hardlinked byte identities without traversing symlinks. Operator progress describes completed work, not guaranteed totals. Imports capture the SDK-supported complete tree, including ignored files; obvious credential names are refused rather than silently excluded. Sources, Stores and private state must remain separate.
+Project initialization is asynchronous. Inspect its job ID or dashboard progress. The preliminary metadata scan counts ignored entries and hardlinked byte identities without traversing symlinks. Operator progress describes completed work, not guaranteed totals. Imports capture the SDK-supported complete tree, including ignored files; credential files are refused rather than silently excluded. The preflight inspects regular files only (imports store symlinks as links): `.env*` except `.env.example/.sample/.template/.dist`, `auth.json`, `credentials[.json]`, `id_rsa/ed25519/ecdsa/dsa`, Store files, and `.pem`/`.key` files that contain a private key. Public certificate bundles such as certifi's `cacert.pem` and directories named `credentials` no longer block importing a complete `.venv`. Sources, Stores and private state must remain separate.
 
-New projects receive separate labelled Docker volumes. Removal requires exact name confirmation, an owned volume and no active actors or mounted Workspaces; stopping empty Sandboxes requires `stopSandboxes`. Viewing, selecting and removing share admission locks. Source folders and session/call journals are preserved. The original deployment volume is protected. Uncertain imports retain their registry/home/volume evidence for inspection instead of being automatically replayed or deleted.
+New projects receive separate labelled Docker volumes. Removal requires exact name confirmation, an owned volume, no lease of another process on the project (expired leases are reclaimed first, waiting one 20-second confirmation interval if any looks expired) and no mounted Workspaces; stopping empty Sandboxes requires `stopSandboxes`. Viewing, selecting and removing share admission locks. Source folders and session/call journals are preserved. The original deployment volume is protected. Uncertain imports retain their registry/home/volume evidence for inspection instead of being automatically replayed or deleted.
 
 ## Tools and workflow
 
@@ -139,6 +141,7 @@ Private state under `LAYERFS_HOME` includes:
 - `pi-bindings/<project>.json`: canonical source, Store and immutable recorded genesis; directory lock/intent for initialization.
 - `pi-projects/`: project registry and asynchronous import jobs, with ownership and removal admission locks.
 - `pi-traces/<project>/<volume-hash>/`: native SDK call traces, actor records and lifecycle/tool/text journals. Recreating a project name with a new volume does not mix old journals into its views.
+- `pi-traces/<project>/<volume-hash>/leases/`: one heartbeat lease per live runtime listing the Workspaces and background processes it holds; `claim-*` files are leases being reclaimed.
 
 Tracing is enabled by the plugin. Native traces summarize file payloads, but command text/output and recorded model text can contain user data; protect the private state and session journals accordingly. Dashboard authentication persists in that browser tab's session storage and is process-specific. Host/Origin checks, CSP and text-node rendering apply. The dashboard has the Pi process's authority; it is not a separate security boundary.
 
@@ -148,11 +151,25 @@ Initialization is once per source/Store binding. `main` begins at L0; after publ
 
 Pi's known hashline mutators (`replace`, `replace_match`, `insert`, `copy`, `move`, `undo_last_change`) and `powershell` are blocked through `tool_call`. Other extensions, unregistered tools and direct host APIs can bypass this integration. A Workspace is not a security sandbox. File tools preserve only metadata supported by the SDK; use Workspace commands for other supported filesystem work.
 
-Foreground `workspace.exec` has no public AbortSignal or foreground process handle. Cancellation is deferred until execution/GNU timeout returns, with a 2-second TERM-to-KILL grace. An abort after commit begins cannot roll it back. Do not daemonize through ordinary Bash; use the process tool. A transport failure or forced Pi kill can leave a Workspace for manual operator inspection. Cleanup adopts no other session's mounts, and interrupted workers are not automatically replayed.
+Foreground `workspace.exec` has no public AbortSignal or foreground process handle. Cancellation is deferred until execution/GNU timeout returns, with a 2-second TERM-to-KILL grace. An abort after commit begins cannot roll it back. Do not daemonize through ordinary Bash; use the process tool. Interrupted workers are not automatically replayed.
+
+### Crash recovery
+
+Workspaces live in Sandbox daemons, not in the Pi process, so a killed Pi process would otherwise keep its overlays mounted and its Sandbox running indefinitely, holding disk that is never returned. Every runtime (lead, worker, viewer) therefore writes a lease that it refreshes every 10 seconds and that lists the Workspaces it holds, each with its Sandbox's container id, and its background processes. Ownership is recorded right after `mount` returns, before the Workspace is used.
+
+A lease is expired when its heartbeat is more than 60 seconds old **and** the reclaiming process has itself seen it unchanged for 20 seconds on its monotonic clock, so a host suspend or wall-clock jump gives a resumed owner time to beat again. Leases of the same Pi process are never claimed by it. Each heartbeat of a live lead, `layerfs_cleanup` and project removal take expired leases over with an atomic rename that only one process wins, then:
+
+- cancel the recorded background processes;
+- skip a Workspace whose Sandbox now has a different container (its mounts died with the old container, and the reused number and path may name another session's Workspace);
+- commit a retained Workspace's uncommitted changes to that Workspace's own Branch (`Recovered uncommitted changes of expired Pi session …`); only a `Conflict`/`HeadMoved` refusal, which needs the absent owner, is reported and the overlay discarded;
+- discard ordinary Bash Workspaces, whose command never confirmed completion;
+- treat `NotMounted` and `NoSuchSandbox` as already gone, because the daemon never reuses a Workspace directory and a stopped container lost its mounts.
+
+Any other failure keeps the claim with the reclaimer, which retries it on its next heartbeat; if that reclaimer dies too, its claims expire with its lease. An unreadable lease file is set aside as `unreadable-*.json` and reported. Results appear in `layerfs_status.recovery`. A Workspace whose Sandbox vanished no longer blocks its own runtime. Other unmount failures, such as a lost daemon connection, still keep the Workspace and block project operations until `layerfs_cleanup` succeeds. A runtime whose heartbeat has been failing for 30 seconds, or whose lease another process took over after it stalled (for example while suspended with Ctrl-Z), refuses further project operations rather than re-owning reclaimed Workspaces; start a new session. A process killed between `mount` returning and its lease write falls outside this recovery.
 
 SDK snapshots, comparisons and storage diagnostics have explicit bounds. History pages use UTF-8-safe byte cursors and retain incomplete appends. Interactive full-history loading is capped at 100000 calls, and terminal rendering at 500 calls around the cursor; full journals remain on disk. Playback shows recorded activity, not a simulated re-execution or a PTY. Missing traces remain unattributed, and old saved nodes beyond the native snapshot bounds can be unavailable. SDK file revision diagnostics currently bound revision scans to 1000; unavailable per-file physical attribution is left null.
 
-Initialization/removal locks have no automatic stale takeover. After a crash, inspect the binding/intent, project entry, Docker volume labels, native snapshot and running processes before manual reconciliation. Unknown imports and failed cleanup retain evidence. Do not delete a Store merely because a reply was lost. A missing or replaced volume, incomplete intent, unrecognized project or missing genesis is reported rather than silently adopted.
+Sessions and workers of an initialized project verify its binding without a lock, reading only Store history (no Sandbox probes), so any number start concurrently. Only the first capture is exclusive: a concurrent starter waits while the capturing process's lease is live, takes over a lock whose owner expired only when no capture began, and otherwise reports the interrupted capture without replaying it. The capture intent is created exclusively, so at most one `project.init` runs. Removal locks have no automatic stale takeover. After a crash, inspect the binding/intent, project entry, Docker volume labels, native snapshot and running processes before manual reconciliation. Unknown imports and failed cleanup retain evidence. Do not delete a Store merely because a reply was lost. A missing or replaced volume, incomplete intent, unrecognized project or missing genesis is reported rather than silently adopted.
 
 For build failures check the locked Cargo cache and `fuse3` headers. For daemon launch failures check `/dev/fuse`, the immutable local image, plain volume, socket and runtime glibc. `scripts/prepare.sh` uses Bookworm builds specifically to avoid host/runtime glibc mismatches. Use `layerfs_status`, `layerfs_inspect` and the preserved phase errors before recovery.
 
@@ -184,5 +201,7 @@ pi-layerfs --self-test
 ```
 
 The original real smoke verifies SDK/daemon/Store operations, Pi extension loading/session registration, normal/nonzero/timeout/cancel command lifecycle, branch isolation and cross-process initialization reuse. The parity smoke adds empty/imported project creation, persistent session identity, retained Workspace/process controls, two real Pi worker tool loops against a credential-free deterministic local model endpoint, merges/conflict resolution/publish/reopen, history/storage, authenticated HTTP inspection and project cleanup. It uses real LayerFS throughout.
+
+The recovery smoke (`npm run test:recovery` through the client, on a dedicated volume) starts four processes on one new project at once, including the first capture; SIGKILLs a process holding a retained Workspace with uncommitted changes plus an in-flight Bash Workspace; checks that a live lease is not taken; and after expiry checks that a new session reclaims both, keeps the retained change on its Branch and leaves no mounts. See [its receipt](docs/recovery-receipt.jsonl).
 
 For browser acceptance run `scripts/parity-smoke.ts --serve` through the client. It reports a private dashboard URL and test finish URL, retains fixtures for at most 15 minutes, then removes the dedicated project volumes while preserving source/journals. Use the finish URL when inspection completes. See [docs/verification.md](docs/verification.md), [baseline receipts](docs/smoke-receipt.json) and the parity evidence linked there for actual identifiers, commands and acceptance boundaries.

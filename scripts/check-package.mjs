@@ -21,6 +21,8 @@ for (const name of [
   "bin/pi-layerfs",
   "scripts/container-entry.mjs",
   "scripts/release-smoke.mjs",
+  "scripts/host-platform.sh",
+  "scripts/project-smoke.mjs",
   "vendor/layerfs/sdk/js/src/index.js",
   "vendor/layerfs/sdk/js/operator/index.js",
   "vendor/layerfs/sdk/js/native/layerfs.node",

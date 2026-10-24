@@ -1,5 +1,13 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -12,12 +20,15 @@ import {
   validateEnvironment,
   verifyStoreMount,
 } from "../src/config.js";
+import { leaseHolders, Watch } from "../src/lease.js";
 import {
   branchPath,
   OperationError,
   quote,
   Runtime,
+  type RuntimeOptions,
   type SDK,
+  sensitiveFiles,
   type Value,
 } from "../src/runtime.js";
 
@@ -39,6 +50,7 @@ async function fixture() {
   const before = { ...process.env };
   process.env.LAYERFS_HOME = home;
   process.env.LAYERFS_STORE_PATH = join(dir, "store/global/store.sqlite");
+  process.env.LAYERFS_VOLUME = "test-volume";
   const events: string[] = [];
   const branches: Value[] = [{ name: "main", base: "L0-id", head: null }];
   const files = new Map<string, string>();
@@ -127,11 +139,17 @@ async function fixture() {
       events.push("close");
     },
   };
-  const create = (c = config) =>
-    new Runtime(root, c, sdk, async () => ({
-      environment: {},
-      filesystem: "ext4",
-    }));
+  const create = (c = config, options: RuntimeOptions = {}) =>
+    new Runtime(
+      root,
+      c,
+      sdk,
+      async () => ({
+        environment: {},
+        filesystem: "ext4",
+      }),
+      options,
+    );
   return {
     root,
     home,
@@ -218,13 +236,68 @@ test("initialization persists once across runtime instances and branch reuse", a
     await f.cleanup();
   }
 });
-test("parallel init fails busy rather than duplicating acquisition", async () => {
+test("first capture waits for a live initializer and takes over only a lock that never began capture", async () => {
   const f = await fixture();
   try {
-    await mkdir(join(f.home, "pi-bindings"));
-    await mkdir(join(f.home, "pi-bindings/test.json.lock"));
-    await assert.rejects(f.create().initialize(), /busy/);
+    const lock = join(f.home, "pi-bindings/test.json.lock");
+    const holder = f.create();
+    await holder.lease.write();
+    await mkdir(lock, { recursive: true });
+    await writeFile(join(lock, "owner"), holder.lease.id);
+    const waiting = f.create().initialize();
+    let settled = false;
+    waiting.finally(() => {
+      settled = true;
+    });
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    assert.equal(settled, false, "a live owner's lock is waited for");
+    await holder.lease.release(); // owner died before writing any binding
+    await waiting;
+    assert.equal(f.events.filter((e) => e === "init").length, 1);
+    await assert.rejects(stat(lock), /ENOENT/);
+  } finally {
+    await f.cleanup();
+  }
+});
+test("an interrupted capture under an expired lock is never replayed", async () => {
+  const f = await fixture();
+  try {
+    const bindings = join(f.home, "pi-bindings");
+    await mkdir(join(bindings, "test.json.lock"), { recursive: true });
+    await writeFile(
+      join(bindings, "test.json.lock/owner"),
+      "00000000-0000-4000-8000-000000000000",
+    );
+    await writeFile(
+      join(bindings, "test.json"),
+      JSON.stringify({
+        version: 1,
+        root: f.root,
+        store: process.env.LAYERFS_STORE_PATH,
+        initial: null,
+      }),
+    );
+    await assert.rejects(f.create().initialize(), /interrupted/);
     assert.ok(!f.events.includes("init"));
+  } finally {
+    await f.cleanup();
+  }
+});
+test("sessions of an initialized project start concurrently and share a racing Branch fork", async () => {
+  const f = await fixture();
+  try {
+    await f.create({ ...config, branch: "seed" }).initialize();
+    // A held lock no longer blocks verification of a complete binding.
+    await mkdir(join(f.home, "pi-bindings/test.json.lock"));
+    const fork = f.sdk.branch.fork;
+    f.sdk.branch.fork = async (name, from) => {
+      await fork(name, from);
+      throw Object.assign(new Error("taken"), { code: "NameTaken" });
+    };
+    const runtimes = [f.create(), f.create(), f.create()];
+    await Promise.all(runtimes.map((r) => r.initialize()));
+    assert.equal(f.events.filter((e) => e === "init").length, 1);
+    for (const r of runtimes) assert.equal((await r.status()).ready, true);
   } finally {
     await f.cleanup();
   }
@@ -557,6 +630,365 @@ test("independent configured branches do not share file updates", async () => {
     ]);
     assert.equal(((await a.files("read", { path: "x" })) as Value).text, "A");
     assert.equal(((await b.files("read", { path: "x" })) as Value).text, "B");
+  } finally {
+    await f.cleanup();
+  }
+});
+const leases = (r: Runtime) => r.lease.dir;
+async function leaseRecords(r: Runtime) {
+  const names = await readdir(leases(r)).catch(() => [] as string[]);
+  return Promise.all(
+    names.map(async (name) => ({
+      name,
+      ...JSON.parse(await readFile(join(leases(r), name), "utf8")),
+    })),
+  );
+}
+async function sandboxRecord(home: string, sandbox: string, container: string) {
+  await mkdir(join(home, "test/sandboxes", sandbox), { recursive: true });
+  await writeFile(
+    join(home, "test/sandboxes", sandbox, "container"),
+    container,
+  );
+}
+async function writeLease(
+  r: Runtime,
+  id: string,
+  heartbeat: number,
+  workspaces: Value[],
+  processes: string[] = [],
+) {
+  await mkdir(r.lease.dir, { recursive: true });
+  await writeFile(
+    join(r.lease.dir, `${id}.json`),
+    JSON.stringify({
+      incarnation: id,
+      agent: id,
+      label: "crashed",
+      branch: "pi-work",
+      heartbeat,
+      workspaces,
+      processes,
+    }),
+  );
+}
+const DEAD = "11111111-1111-4111-8111-111111111111";
+test("Workspace ownership, with its container, is persisted while held and released on shutdown", async () => {
+  const f = await fixture();
+  try {
+    const r = f.create();
+    await r.initialize();
+    await sandboxRecord(f.home, "1", "c-1");
+    let during: Value[] = [];
+    f.setExec(async () => {
+      during = await leaseRecords(r);
+      return { exitCode: 0, stdout: "", stderr: "" };
+    });
+    await r.bash("true");
+    assert.deepEqual(during[0].workspaces, [
+      {
+        sandbox: "1",
+        path: "/workspaces/1",
+        container: "c-1",
+        retained: false,
+      },
+    ]);
+    assert.deepEqual((await leaseRecords(r))[0].workspaces, []);
+    await r.shutdown();
+    assert.deepEqual(await leaseRecords(r), []);
+  } finally {
+    await f.cleanup();
+  }
+});
+test("expired leases are reclaimed only after confirmation: retained work committed, overlays discarded, replaced Sandboxes untouched", async () => {
+  const f = await fixture();
+  try {
+    const cancelled: string[] = [];
+    const operator = {
+      process: {
+        cancel: async (id: unknown) => {
+          cancelled.push(String(id));
+          if (id === "p-gone")
+            throw Object.assign(new Error("gone"), { code: "NoSuchProcess" });
+          if (id === "p-sandbox")
+            throw Object.assign(new Error("gone"), { code: "NoSuchSandbox" });
+          return {};
+        },
+      },
+    };
+    const r = f.create(config, {
+      operator,
+      agent: "lead",
+      history: async () => ({ layers: [{ id: "L0-id" }] }),
+    });
+    r.watch = new Watch(0);
+    const live = "22222222-2222-4222-8222-222222222222";
+    await writeLease(
+      r,
+      DEAD,
+      Date.now() - 120_000,
+      [
+        {
+          sandbox: "2",
+          path: "/workspaces/9",
+          container: "c-2",
+          retained: true,
+        },
+        {
+          sandbox: "3",
+          path: "/workspaces/1",
+          container: "c-3",
+          retained: false,
+        },
+        {
+          sandbox: "4",
+          path: "/workspaces/2",
+          container: "c-4",
+          retained: false,
+        },
+        // Sandbox 6 was replaced: the same number and path are someone else's.
+        {
+          sandbox: "6",
+          path: "/workspaces/1",
+          container: "c-6-old",
+          retained: true,
+        },
+      ],
+      ["p1", "p-gone", "p-sandbox"],
+    );
+    await writeLease(r, live, Date.now(), [
+      { sandbox: "5", path: "/workspaces/1", container: "c-5", retained: true },
+    ]);
+    const touched: string[] = [];
+    f.sdk.workspace.commit = async (ws) => {
+      touched.push(`commit:${ws.sandbox}`);
+      return { kind: "Committed", head: "c1" };
+    };
+    f.sdk.workspace.unmount = async (ws, discard) => {
+      touched.push(`unmount:${ws.sandbox}:${discard}`);
+      if (ws.sandbox === "4")
+        throw Object.assign(new Error("gone"), {
+          code: "NoSuchSandbox",
+          detail: { containerGone: true },
+        });
+      return { kind: "Unmounted" };
+    };
+    await r.initialize();
+    await sandboxRecord(f.home, "2", "c-2");
+    await sandboxRecord(f.home, "3", "c-3");
+    await sandboxRecord(f.home, "4", "c-4");
+    await sandboxRecord(f.home, "6", "c-6-new");
+    // First sighting only: a resumed owner gets time to beat again.
+    assert.deepEqual(touched, []);
+    assert.equal(r.recovery, undefined);
+    await r.reclaim();
+    assert.deepEqual(cancelled, ["p1", "p-gone", "p-sandbox"]);
+    assert.deepEqual(touched, [
+      "commit:2",
+      "unmount:2:true",
+      "unmount:3:true",
+      "unmount:4:true",
+    ]);
+    const recovery = required((await r.status()).recovery);
+    assert.deepEqual(recovery.errors, []);
+    const reclaimed = recovery.reclaimed as Value[];
+    assert.deepEqual(
+      reclaimed.map((w) => [w.sandbox, Boolean(w.gone)]),
+      [
+        ["2", false],
+        ["3", false],
+        ["4", true],
+        ["6", true],
+      ],
+    );
+    assert.equal((reclaimed[0].commit as Value).head, "c1");
+    const remaining = (await leaseRecords(r)).map((l) => l.incarnation).sort();
+    assert.deepEqual(remaining, [live, r.lease.id].sort());
+  } finally {
+    await f.cleanup();
+  }
+});
+test("a refused reclamation stays claimed by the live reclaimer; only a conflict discards", async () => {
+  const f = await fixture();
+  try {
+    const r = f.create();
+    r.watch = new Watch(0);
+    await writeLease(r, DEAD, 0, [
+      { sandbox: "2", path: "/workspaces/1", container: "c-2", retained: true },
+    ]);
+    let commitError: Value = { code: "Failed" };
+    const unmounts: boolean[] = [];
+    f.sdk.workspace.commit = async () => {
+      throw Object.assign(new Error("refused"), commitError);
+    };
+    let busy = true;
+    f.sdk.workspace.unmount = async (_ws, discard) => {
+      unmounts.push(Boolean(discard));
+      if (busy) throw Object.assign(new Error("busy"), { code: "Busy" });
+      return { kind: "Unmounted" };
+    };
+    await r.initialize();
+    await sandboxRecord(f.home, "2", "c-2");
+    // A transient commit failure keeps the work: nothing is discarded.
+    const first = await r.reclaim();
+    assert.equal((first.errors as Value[])[0].code, "Failed");
+    assert.deepEqual(unmounts, []);
+    const claimed = `claim-${r.lease.id}-${DEAD}.json`;
+    assert.ok((await readdir(r.lease.dir)).includes(claimed));
+    // Another live process does not steal a claim whose reclaimer is alive.
+    const other = f.create();
+    other.watch = new Watch(0);
+    await other.lease.write();
+    await other.reclaim();
+    await other.reclaim();
+    assert.ok((await readdir(r.lease.dir)).includes(claimed));
+    commitError = { code: "Conflict", detail: { conflicts: ["a"] } };
+    assert.equal(((await r.reclaim()).errors as Value[])[0].code, "Busy");
+    busy = false;
+    const last = await r.reclaim();
+    assert.deepEqual(last.errors, []);
+    const entry = (last.reclaimed as Value[])[0];
+    assert.equal((entry.discarded as Value).code, "Conflict");
+    assert.ok(!(await readdir(r.lease.dir)).includes(claimed));
+  } finally {
+    await f.cleanup();
+  }
+});
+test("a lease that was taken over makes its runtime refuse instead of re-owning", async () => {
+  const f = await fixture();
+  try {
+    const victim = f.create();
+    await victim.initialize();
+    const reclaimer = f.create();
+    reclaimer.watch = new Watch(0);
+    await reclaimer.initialize();
+    // Simulate a stalled victim whose lease another process claimed.
+    victim.lease.stop();
+    const record = JSON.parse(await readFile(victim.lease.file, "utf8"));
+    await writeFile(
+      victim.lease.file,
+      JSON.stringify({ ...record, heartbeat: 1 }),
+    );
+    await reclaimer.reclaim();
+    await reclaimer.reclaim();
+    await assert.rejects(victim.lease.write(), /taken over/);
+    assert.equal(victim.lease.lost, true);
+    await assert.rejects(victim.files("read", { path: "a" }), /lease/);
+    assert.ok(
+      !(await readdir(victim.lease.dir)).includes(`${victim.lease.id}.json`),
+    );
+  } finally {
+    await f.cleanup();
+  }
+});
+test("expiry needs the reclaimer's own monotonic confirmation, and leases of this process are never claimed", async () => {
+  const watch = new Watch(50);
+  const stale = Date.now() - 120_000;
+  assert.equal(watch.expired("a", stale), false);
+  assert.equal(watch.expired("a", stale), false);
+  await new Promise((r) => setTimeout(r, 60));
+  assert.equal(watch.expired("a", stale), true);
+  // A heartbeat that moved restarts the confirmation; a fresh one is live.
+  assert.equal(watch.expired("a", stale + 1), false);
+  assert.equal(watch.expired("a", Date.now()), false);
+  const f = await fixture();
+  try {
+    const worker = f.create(config, { role: "worker" });
+    await worker.initialize();
+    const record = JSON.parse(await readFile(worker.lease.file, "utf8"));
+    await writeFile(
+      worker.lease.file,
+      JSON.stringify({ ...record, heartbeat: 1 }),
+    );
+    const lead = f.create();
+    lead.watch = new Watch(0);
+    await lead.initialize();
+    await lead.reclaim();
+    assert.ok(
+      (await readdir(lead.lease.dir)).includes(`${worker.lease.id}.json`),
+    );
+  } finally {
+    await f.cleanup();
+  }
+});
+test("a Workspace whose Sandbox vanished no longer blocks the runtime", async () => {
+  const f = await fixture();
+  try {
+    const r = f.create();
+    await r.initialize();
+    f.setExec(async () => {
+      throw Object.assign(new Error("lost"), { code: "NoSuchSandbox" });
+    });
+    f.setUnmount(
+      Object.assign(new Error("gone"), {
+        code: "NoSuchSandbox",
+        detail: { containerGone: true },
+      }),
+    );
+    await assert.rejects(r.bash("true"), OperationError);
+    const status = await r.status();
+    assert.equal(status.ready, true);
+    assert.deepEqual(status.mounted, []);
+    f.setExec(async () => ({ exitCode: 0, stdout: "", stderr: "" }));
+    f.setUnmount();
+    assert.equal((await r.bash("true")).commit?.kind, "UpToDate");
+    // A transport failure, by contrast, keeps the Workspace for recovery.
+    f.setUnmount(new Error("transport"));
+    await assert.rejects(r.bash("true"), OperationError);
+    assert.equal((await r.status()).ready, false);
+    f.setUnmount(Object.assign(new Error("gone"), { code: "NotMounted" }));
+    await r.cleanup();
+    assert.equal((await r.status()).ready, true);
+  } finally {
+    await f.cleanup();
+  }
+});
+test("credential preflight refuses private keys but admits public bundles in environments", async () => {
+  const f = await fixture();
+  try {
+    const site = join(f.root, ".venv/lib/python3.12/site-packages");
+    await mkdir(join(site, "certifi"), { recursive: true });
+    await mkdir(join(site, "pyright/stubs/google/auth/credentials"), {
+      recursive: true,
+    });
+    await writeFile(
+      join(site, "certifi/cacert.pem"),
+      "-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----\n",
+    );
+    await writeFile(join(f.root, ".env.example"), "TOKEN=\n");
+    await writeFile(join(f.root, "slides.key"), "PK\u0003\u0004keynote");
+    assert.deepEqual(await sensitiveFiles(f.root), []);
+    await writeFile(
+      join(f.root, "server.pem"),
+      "-----BEGIN CERTIFICATE-----\nx\n-----END CERTIFICATE-----\n-----BEGIN EC PRIVATE KEY-----\ny\n",
+    );
+    await writeFile(join(f.root, ".env.local"), "TOKEN=x\n");
+    await mkdir(join(f.root, "home/.ssh"), { recursive: true });
+    await writeFile(join(f.root, "home/.ssh/id_ecdsa"), "x");
+    assert.deepEqual((await sensitiveFiles(f.root)).sort(), [
+      ".env.local",
+      "home/.ssh/id_ecdsa",
+      "server.pem",
+    ]);
+  } finally {
+    await f.cleanup();
+  }
+});
+test("removal sees every lease holder and which ones look expired", async () => {
+  const f = await fixture();
+  try {
+    const a = f.create(config, { agent: "a" });
+    await a.lease.write();
+    await writeLease(a, DEAD, 1, []);
+    await writeFile(
+      join(a.lease.dir, "33333333-3333-4333-8333-333333333333.json"),
+      "{",
+    );
+    assert.deepEqual([...(await leaseHolders(a.lease.dir))].sort(), [
+      [DEAD, true],
+      ["a", false],
+      ["unreadable:33333333-3333-4333-8333-333333333333.json", true],
+    ]);
   } finally {
     await f.cleanup();
   }

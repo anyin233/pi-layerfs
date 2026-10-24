@@ -13,6 +13,9 @@ export type RuntimeOptions = {
   role?: "lead" | "worker";
   deployment?: Record<string, string | undefined>;
   operator?: Surface;
+  // Store history only; unlike inspect.snapshot it probes no Sandbox, so
+  // concurrent startups do not race LayerFS's reclaiming of stopped ones.
+  history?: () => Promise<Value>;
   trace?: string;
 };
 export function invoke(
@@ -70,10 +73,13 @@ export async function loadClient(
     sdkPath === "@layerfs/sdk"
       ? import.meta.resolve("@layerfs/sdk/operator")
       : new URL("../operator/index.js", entry).href;
-  const [{ LayerFS }, { LayerFSOperator }] = await Promise.all([
-    import(entry),
-    import(operatorEntry),
-  ]);
+  const [{ LayerFS }, { LayerFSOperator }, { invokeOperator }] =
+    await Promise.all([
+      import(entry),
+      import(operatorEntry),
+      // The pinned SDK's own operator dispatch (operator/inspect/snapshot.js).
+      import(new URL("./client.js", entry).href),
+    ]);
   const home = required(options.deployment?.HOME ?? environment().HOME);
   const dir = traceDirectory(
     home,
@@ -89,5 +95,21 @@ export async function loadClient(
       new LayerFS(project, { trace: options.trace, traceStep: options.agent }),
   );
   options.operator = new LayerFSOperator(sdk);
+  const client = sdk as unknown as {
+    store(): Promise<unknown>;
+    options: { home?: string; storePath?: string };
+  };
+  options.history = async () => {
+    await client.store();
+    return invokeOperator(
+      "operator.inspect.history",
+      {
+        project,
+        home: client.options.home,
+        storePath: client.options.storePath,
+      },
+      client.options,
+    );
+  };
   return sdk;
 }

@@ -31,6 +31,8 @@
     "docs",
     "examples",
     "scripts/container-entry.mjs",
+    "scripts/host-platform.sh",
+    "scripts/project-smoke.mjs",
     "scripts/release-smoke.mjs"
   ],
   "bin": {
@@ -54,6 +56,7 @@
     "test": "tsx --test test/*.test.ts",
     "test:integration": "tsx scripts/smoke.ts",
     "test:parity": "tsx scripts/parity-smoke.ts",
+    "test:recovery": "tsx scripts/recovery-smoke.ts",
     "test:release": "node scripts/check-package.mjs",
     "release:build": "node scripts/build-release.mjs",
     "lint": "biome check src test scripts/*.ts",

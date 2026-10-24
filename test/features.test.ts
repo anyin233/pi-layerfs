@@ -144,6 +144,7 @@ async function fixture() {
       VOLUME: "unit-volume",
     },
     operator,
+    history: async () => ({ layers }),
   };
   const runtime = new Runtime(
     root,

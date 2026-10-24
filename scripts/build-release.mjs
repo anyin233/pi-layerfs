@@ -22,7 +22,15 @@ const source = resolve(
     ? args[args.indexOf("--upstream") + 1]
     : ".build/layerfs",
 );
-const out = resolve("release-out");
+const option = (name, fallback) => {
+  const i = args.indexOf(name);
+  if (i < 0) return fallback;
+  assert.ok(args[i + 1] && !args[i + 1].startsWith("--"), `${name} needs a value`);
+  return args[i + 1];
+};
+const target = option("--target", "linux-x64");
+assert.ok(["linux-x64", "macos"].includes(target), "--target must be linux-x64 or macos");
+const out = resolve(option("--out", "release-out"));
 await mkdir(out, { recursive: true });
 async function run(program, argv, capture = false) {
   return new Promise((resolveRun, reject) => {
@@ -95,12 +103,14 @@ const image = await run(
 );
 assert.match(image, /^sha256:[a-f0-9]{64}$/);
 const stage = await mkdtemp(join(out, ".bundle-"));
-const name = `pi-layerfs-${info.version}-linux-x64`;
+const name = `pi-layerfs-${info.version}-${target}`;
 const bundle = join(stage, name);
 await mkdir(bundle);
 for (const name of ["LICENSE", "THIRD_PARTY_NOTICES.md", "VERSION"])
   await copyFile(name, join(bundle, name));
 await copyFile("release/install.sh", join(bundle, "install.sh"));
+await copyFile("scripts/host-platform.sh", join(bundle, "host-platform.sh"));
+await copyFile("scripts/host-smoke.sh", join(bundle, "host-smoke.sh"));
 await chmod(join(bundle, "install.sh"), 0o755);
 await copyFile(plugin, join(bundle, "plugin.tgz"));
 await writeFile(join(bundle, "IMAGE_ID"), `${image}\n`);
@@ -113,15 +123,17 @@ await run("bash", [
 const manifest = {
   name: info.name,
   version: info.version,
-  platform: "linux-x64",
+  platform: target,
+  runtimePlatform: "linux/amd64",
+  appleSiliconEmulation: target === "macos",
   image,
   sourceRevision,
   layerfsRevision: "1aa56ece78e2ecd71b46cf07076100345df47239",
   piVersion: "1.4.0",
   externalRequirements: [
-    "Linux x86_64",
+    target === "macos" ? "macOS Intel or Apple Silicon (amd64 emulation)" : "Linux x86_64",
     "Docker Engine with its Unix socket",
-    "/dev/fuse",
+    target === "macos" ? "Linux Docker VM with /dev/fuse and host networking (Docker Desktop: enable host networking)" : "/dev/fuse",
     "plain local ext4/xfs/btrfs Docker volume",
   ],
   installDownloads: false,
@@ -132,6 +144,8 @@ await writeFile(
   `${JSON.stringify(manifest, null, 2)}\n`,
 );
 const names = [
+  "host-platform.sh",
+  "host-smoke.sh",
   "IMAGE_ID",
   "LICENSE",
   "THIRD_PARTY_NOTICES.md",

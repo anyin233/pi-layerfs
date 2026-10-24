@@ -15,7 +15,7 @@ COPY dist /opt/pi-layerfs/dist
 COPY src /opt/pi-layerfs/src
 COPY vendor/layerfs /opt/pi-layerfs/vendor/layerfs
 COPY bin /opt/pi-layerfs/bin
-COPY scripts/container-entry.mjs scripts/release-smoke.mjs /opt/pi-layerfs/scripts/
+COPY scripts/container-entry.mjs scripts/release-smoke.mjs scripts/host-platform.sh scripts/project-smoke.mjs /opt/pi-layerfs/scripts/
 COPY package.json README.md LICENSE THIRD_PARTY_NOTICES.md VERSION /opt/pi-layerfs/
 RUN ln -s /opt/pi-runtime/node_modules /opt/pi-layerfs/node_modules \
  && chmod +x /opt/pi-layerfs/bin/pi-layerfs /opt/pi-layerfs/vendor/layerfs/bin/layerfs-daemon \

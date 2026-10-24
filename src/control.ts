@@ -13,9 +13,11 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
 import { environment, required } from "./config.js";
 import { docker } from "./docker.js";
 import { type Counts, scanSource } from "./import-progress.js";
+import { CONFIRM_MS, leaseHolders } from "./lease.js";
 import { Operations } from "./operations.js";
 import { loadClient } from "./ports.js";
 import {
@@ -188,7 +190,16 @@ export class Control {
     );
     const ops = new Operations(r);
     await ops.ready();
+    // Viewers hold no Workspace, but their lease keeps removal from
+    // pulling the Store out from under another live process.
+    await r.lease.write();
+    r.lease.start();
     return ops;
+  }
+  private async closeReader(ops: Operations) {
+    await ops.runtime.lease.release();
+    await ops.runtime.sdk.close();
+    await ops.actor("closed");
   }
   async reader(project: string) {
     const cached = this.readers.get(project);
@@ -387,7 +398,7 @@ export class Control {
       await polling;
       if (timer) clearTimeout(timer);
       if (ops) {
-        await ops.runtime.sdk.close();
+        await ops.runtime.shutdown();
         await ops.actor("closed");
       }
       await writeFile(
@@ -440,14 +451,24 @@ export class Control {
       const ops =
         this.readers.get(project) ?? (await this.createReader(record));
       this.readers.set(project, ops);
-      const work = await ops.work();
-      if (
-        (work.actors as Value[]).some(
-          (a) => a.state !== "closed" && a.agent !== ops.runtime.options.agent,
-        )
-      )
+      // Crashed sessions never write "closed"; their lease decides. An
+      // expired lease is taken only after a confirmation interval.
+      const holders = async () => {
+        const recovery = await ops.runtime.reclaim();
+        if ((recovery.errors as Value[]).length)
+          throw new Error(
+            `Workspaces of expired sessions could not be reclaimed: ${JSON.stringify(recovery.errors)}`,
+          );
+        const agents = await leaseHolders(ops.runtime.lease.dir);
+        agents.delete(required(ops.runtime.options.agent));
+        return agents;
+      };
+      if ([...(await holders()).values()].some(Boolean))
+        await sleep(CONFIRM_MS + 1000);
+      const live = await holders();
+      if (live.size)
         throw new Error(
-          "Project has active or interrupted agents; close or reconcile them first",
+          `Project has live sessions in other processes (${[...live.keys()].join(", ")}); close them first`,
         );
       const state = await ops.inspect("snapshot");
       if (!("sandboxes" in state) || !Array.isArray(state.sandboxes))
@@ -478,8 +499,7 @@ export class Control {
           "DELETE",
         );
       }
-      await ops.runtime.sdk.close();
-      await ops.actor("closed");
+      await this.closeReader(ops);
       this.readers.delete(project);
       await docker(`/volumes/${encodeURIComponent(record.volume)}`, "DELETE");
       await rm(join(required(this.runtime.options.deployment?.HOME), project), {
@@ -511,10 +531,7 @@ export class Control {
     await Promise.allSettled([...this.readerOpening.values()]);
     const results = await Promise.allSettled([
       this.runtime.shutdown(),
-      ...[...this.readers.values()].map(async (o) => {
-        await o.runtime.sdk.close();
-        return o.actor("closed");
-      }),
+      ...[...this.readers.values()].map((o) => this.closeReader(o)),
     ]);
     const failure = results.find((r) => r.status === "rejected");
     await this.operations.actor(failure ? "cleanup_failed" : "closed");

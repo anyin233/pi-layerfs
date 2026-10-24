@@ -78,6 +78,8 @@
 4. 与 hashline 扩展的文件工具存在冲突。当前安装采用显式容器启动器，普通 Pi 会话不自动加载 LayerFS。
 5. Store 为 Disposable 模式，本次测试没有验证崩溃或断电恢复。
 
+后续（2026-10-24）：第 1、2 项已修复。已初始化项目的 binding 改为无锁校验，只有首次导入互斥，并等待仍在心跳的导入进程；预检只检查普通文件，`.pem`/`.key` 只在含私钥时拒绝。见 README 的 Crash recovery 与 [verification](verification.md#crash-recovery-and-concurrent-startup-2026-10-24)。本基准数据未重测。
+
 失败的依赖预检、导入过滤、绑定并发、容器前缀冲突和早期共享 PYTHONPATH 试跑日志分别保留；这些试跑不进入正式统计。没有把修改 PYTHONPATH 前的完整环境结果混入最终数据。
 
 **本机安装入口**

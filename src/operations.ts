@@ -12,17 +12,16 @@ import { join } from "node:path";
 import { runWorkspace } from "./commands.js";
 import { required } from "./config.js";
 import { compareSaved, traceFiles, tracePage } from "./history.js";
-import { invoke, traceDirectory } from "./ports.js";
+import { workspaceGone } from "./lease.js";
+import { invoke } from "./ports.js";
 import {
   branchPath,
   errorData,
   OperationError,
   type Runtime,
   type Value,
-  type Workspace,
 } from "./runtime.js";
 
-export const workspaceKey = (ws: Workspace) => `${ws.sandbox}:${ws.path}`;
 export function name(value: unknown): string {
   if (
     typeof value !== "string" ||
@@ -35,13 +34,7 @@ export function name(value: unknown): string {
 export class Operations {
   readonly traceDir: string;
   constructor(readonly runtime: Runtime) {
-    this.traceDir = traceDirectory(
-      required(runtime.options.deployment?.HOME ?? process.env.LAYERFS_HOME),
-      runtime.config.project,
-      required(
-        runtime.options.deployment?.VOLUME ?? process.env.LAYERFS_VOLUME,
-      ),
-    );
+    this.traceDir = runtime.traceDir;
   }
   async ready() {
     await mkdir(this.traceDir, { recursive: true, mode: 0o700 });
@@ -322,9 +315,7 @@ export class Operations {
           image ? { image } : undefined,
         );
         ws.branch = branch;
-        const id = workspaceKey(ws);
-        r.owned.set(id, ws);
-        r.persistent.add(id);
+        const id = await r.hold(ws, true);
         await this.record({ method: "workspace.mount", workspace: ws });
         return { id, ...ws };
       }
@@ -376,10 +367,15 @@ export class Operations {
             a.force === true,
           );
         case "unmount": {
-          const result = await r.sdk.workspace.unmount(ws, a.discard === true);
-          r.owned.delete(id);
-          r.persistent.delete(id);
+          let result: Value;
+          try {
+            result = await r.sdk.workspace.unmount(ws, a.discard === true);
+          } catch (e) {
+            if (!workspaceGone(e)) throw e;
+            result = { kind: "Gone", ...errorData(e) };
+          }
           r.processes.clear();
+          await r.release(id);
           return result;
         }
         case "overlay":
@@ -408,6 +404,7 @@ export class Operations {
           String(required(a.command)),
         ]);
         r.processes.add(String(value.process));
+        await r.lease.write();
         await this.record({
           method: "process.start",
           workspace: ws,
@@ -423,6 +420,7 @@ export class Operations {
           id,
         ]);
         r.processes.delete(id);
+        await r.lease.write();
         return value;
       }
       throw new Error("Unknown process action");

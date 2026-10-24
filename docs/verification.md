@@ -100,3 +100,28 @@ bash scripts/client.sh .layerfs-local/env.sh bash -c \
 No remote-model conversation was tested. Arbitrary third-party tools and extension collisions are outside the clean-profile acceptance. Cancellation is deferred by the SDK foreground API. Daemon loss, a killed Pi process, or processes that outlive a command can prevent automatic unmount; manual operator inspection remains necessary in those cases. File metadata is preserved only within SDK capabilities. LayerFS is currently Disposable, with no crash or power-loss durability.
 
 Advisor review was attempted for the implementation direction and completion; the tool returned `Advisor model not configured`. Work continued with local source verification, tests, LSP, and real integration evidence.
+
+## Crash recovery and concurrent startup (2026-10-24)
+
+Same host and Docker Engine as above; dev runtime image `sha256:0ee21e3923293d06ed3dd3d653bd513d11eab506e370ef435ee12096cc3dc936`. Each run used a new labelled plain local volume and a unique container prefix. All results below are from the final source.  The test volumes and their stopped Sandboxes were removed after the receipts were saved.
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Static | `npm run typecheck`, `npm run lint`, `npm run build` | Exit 0 |
+| Unit | `npm test` | 56 passed, 0 failed |
+| Recovery | `bash scripts/client.sh ENV npm run test:recovery`, fresh volume `pi-layerfs-3873c40a5559-final-1792845750` | Exit 0; [receipt](recovery-receipt.jsonl) |
+| Baseline smoke | `bash scripts/client.sh ENV node_modules/.bin/tsx scripts/smoke.ts`, volume `pi-layerfs-3873c40a5559-regress-1792844661` | Exit 0, 43 receipt lines |
+| Parity smoke | `bash scripts/client.sh ENV --manage-projects node_modules/.bin/tsx scripts/parity-smoke.ts`, same volume | Exit 0, 47 receipt lines; two real Pi worker loops completed; both test projects removed through the lease-based removal admission |
+
+Recovery receipt observations:
+
+- Four processes started sessions of one new project at once, including the first capture; all were ready on `pi-work`.
+- A process holding a retained Workspace with an uncommitted, run-unique `recovered.txt` plus an ordinary Bash Workspace was killed with SIGKILL. Both stayed mounted in `inspect.snapshot`, each recorded with its Sandbox container id. A session started before expiry did not take them.
+- After expiry plus the monotonic confirmation, a heartbeat of a new lead reclaimed both: the retained Workspace was `Committed` to `pi-work` with the recovery message, `recovered.txt` read back with the run's token, and no Workspace remained mounted. The Sandbox then idle-closed.
+
+Issues found and fixed while verifying:
+
+- The first attempt on the shared development volume failed with `Store install: Store destination exists`: that volume already holds the `pi-smoke` Store (one project per Store volume). Only the artifacts that attempt created (intent, project home, traces, fixture) were removed.
+- Killing the `tsx` CLI left its node child heartbeating, so its lease was correctly not reclaimed; the script spawns node directly.
+- With concurrent startup possible, two of four starters failed in `operator.inspect.snapshot` while another starter's `sandbox.list` deleted a stopped Sandbox left by an earlier run (`WireFailure … exact running container observation`). Startup verification now reads only Store history (`operator.inspect.history`), which probes no Sandbox; the rerun passed.
+- An independent review found that a lease identified Workspaces only by Sandbox number and path, both of which LayerFS reuses after a container is replaced; that expiry trusted the wall clock; and that `NoSuchSandbox` on process cancel, transient commit failures, shutdown/tick races, cached scan errors, lock takeover races, unreadable leases and worker-initiated reclaim were mishandled. Each has a unit test or code change described in the README's Crash recovery section.

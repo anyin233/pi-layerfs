@@ -183,6 +183,12 @@ export default function layerfsExtension(
           ? "Choose project: /layerfs ui"
           : `${runtime.config.project} / ${runtime.config.branch} (Disposable)`,
       );
+      const recovery = runtime.recovery;
+      if (recovery && runtime.config.logLevel !== "silent")
+        ctx.ui.notify(
+          `LayerFS reclaimed ${(recovery.reclaimed as Value[]).length} Workspace(s) of expired Pi sessions; ${(recovery.errors as Value[]).length} need attention (layerfs_status)`,
+          (recovery.errors as Value[]).length ? "warning" : "info",
+        );
       if (runtime.config.logLevel === "info")
         ctx.ui.notify(
           `LayerFS ready: ${runtime.config.project}/${runtime.config.branch}`,
@@ -354,10 +360,11 @@ export default function layerfsExtension(
   );
   tool(
     "layerfs_cleanup",
-    "Cancel owned background processes and discard/unmount owned Workspaces; report cleanup failures.",
+    "Cancel owned background processes and discard/unmount owned Workspaces, then (lead only) reclaim Workspaces of Pi sessions whose heartbeat expired; report failures.",
     Type.Object({}),
     async () => {
       await get().cleanup();
+      if (!options.worker) await get().reclaim();
       return get().status();
     },
   );
