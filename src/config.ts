@@ -150,9 +150,17 @@ export function verifyStoreMount(
   const mount = mounts[0];
   if (!mount || !["ext4", "xfs", "btrfs"].includes(mount.fs ?? ""))
     throw new Error(`Unsupported Store filesystem: ${mount?.fs ?? "unknown"}`);
+  // A VM-backed Engine (OrbStack, Docker Desktop on macOS) keeps its data root
+  // on a subvolume or bind, so mountinfo names the volume relative to that
+  // filesystem, e.g. /docker/volumes/NAME/_data for
+  // /var/lib/docker/volumes/NAME/_data. The volume's own directory must match.
+  const sameVolume =
+    mount.root === dockerMountpoint ||
+    (/\/volumes\/[^/]+\/_data$/.test(mount.root) &&
+      dockerMountpoint.endsWith(mount.root));
   if (
     storeRoot !== dockerMountpoint &&
-    !(mount.target === storeRoot && mount.root === dockerMountpoint)
+    !(mount.target === storeRoot && sameVolume)
   )
     throw new Error(
       "LAYERFS_STORE_PATH does not resolve to the configured Docker volume root; SDK and daemon must share one Store",

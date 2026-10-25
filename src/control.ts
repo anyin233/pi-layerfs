@@ -456,13 +456,18 @@ export class Control {
       const ops =
         this.readers.get(project) ?? (await this.createReader(record));
       this.readers.set(project, ops);
-      // Crashed sessions never write "closed"; their lease decides. An
-      // expired lease is taken only after a confirmation interval.
+      // Crashed sessions never write "closed"; their lease decides. A lease
+      // of a dead holder is taken at once, an expired one only after a
+      // confirmation interval.
       const holders = async () => {
         const recovery = await ops.runtime.reclaim();
-        if ((recovery.errors as Value[]).length)
+        const unfinished = [
+          ...(recovery.pending as Value[]),
+          ...(recovery.errors as Value[]),
+        ];
+        if (unfinished.length)
           throw new Error(
-            `Workspaces of expired sessions could not be reclaimed: ${JSON.stringify(recovery.errors)}`,
+            `Workspaces of ended sessions could not be reclaimed yet: ${JSON.stringify(unfinished)}`,
           );
         const agents = await leaseHolders(ops.runtime.lease.dir);
         agents.delete(required(ops.runtime.options.agent));

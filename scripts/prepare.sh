@@ -1,42 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
 # Usage: bash scripts/prepare.sh /absolute/layerfs [private-state-directory]
+# Works on Linux and on macOS with OrbStack or Docker Desktop: native artifacts
+# are built for the Engine's architecture inside the pinned Bookworm builder.
 plugin_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 upstream=$(realpath -- "${1:?Pass an existing LayerFS checkout}")
 state_dir=${2:-"$plugin_root/.layerfs-local"}
 mkdir -p -- "$state_dir"
 state_dir=$(realpath -- "$state_dir")
-chmod 700 -- "$state_dir"
-[[ $(uname -s) == Linux ]]
+chmod 700 "$state_dir"
+host_os=$(uname -s)
+[[ "$host_os" == Linux || "$host_os" == Darwin ]]
 node -e 'if (Number(process.versions.node.split(".")[0]) < 22) process.exit(1)'
 docker version
-[[ -c /dev/fuse ]]
+if [[ "$host_os" == Linux ]]; then [[ -c /dev/fuse ]]; fi
 [[ $(git -C "$upstream" rev-parse HEAD) == ad78914e36b258b360daf13aec164b5655814689 ]] || { echo 'LayerFS revision differs from qualified revision; review compatibility first' >&2; exit 1; }
-(
-  cd -- "$upstream"
-  cargo +1.85.1 fetch --manifest-path core/Cargo.toml --locked
-  # Links api/'s workspaces, so @layerfs/backend resolves @layerfs/agent; it downloads nothing.
-  npm --prefix api install --ignore-scripts --no-audit --no-fund
-  npm --prefix api run build:native
-  cargo +1.85.1 build --manifest-path core/Cargo.toml --offline --locked --release -p layerfs-daemon --bins
-)
+# Links api/'s workspaces, so @layerfs/backend resolves @layerfs/agent; it downloads nothing.
+npm --prefix "$upstream/api" install --ignore-scripts --no-audit --no-fund
 # The daemon must target the runtime's glibc, not the development host's.
-# Follow upstream's bookworm build recipe with its own target directory.
-docker pull rust:1.85.1-bookworm
-mkdir -p "$upstream/core/target/pi-bookworm"
-docker run --rm --user "$(id -u):$(id -g)" \
-  -v "$upstream:/work" -v "${CARGO_HOME:-$HOME/.cargo}/registry:/usr/local/cargo/registry:ro" \
-  -e CARGO_TARGET_DIR=/work/core/target/pi-bookworm -w /work \
-  rust:1.85.1-bookworm cargo build --manifest-path core/Cargo.toml --offline --locked --release -p layerfs-node --lib -p layerfs-daemon --bins
-cp "$upstream/core/target/pi-bookworm/release/liblayerfs_node.so" "$upstream/core/target/pi-bookworm/layerfs.node"
+bash "$plugin_root/scripts/build-native.sh" "$upstream"
+arch=$(node -p 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).platform.slice(6)' "$plugin_root/vendor/layerfs/ARTIFACTS.json")
+target="$upstream/core/target/pi-bookworm-$arch"
 # LayerFS 1.1.0 ships no runtime image; the plugin image's base stage is the
 # former upstream one. The actual immutable ID, never the tag, is given to SDK.
 docker build --target runtime -t pi-layerfs-runtime:local -f "$plugin_root/container/Dockerfile" "$plugin_root"
 image_id=$(docker image inspect --format '{{.Id}}' pi-layerfs-runtime:local)
+docker run --rm --device /dev/fuse --entrypoint test "$image_id" -c /dev/fuse \
+  || { echo 'The Docker Engine provides no /dev/fuse.' >&2; exit 1; }
 # State-directory identity makes resources specific to this installation.
-instance=$(printf '%s' "$state_dir" | sha256sum | cut -c1-12)
+instance=$(printf '%s' "$state_dir" | { if command -v sha256sum >/dev/null 2>&1; then sha256sum; else shasum -a 256; fi; } | cut -c1-12)
 volume="pi-layerfs-$instance-store"
-docker volume create --label pi-layerfs.instance="$instance" "$volume"
+docker volume inspect "$volume" >/dev/null 2>&1 || docker volume create --label pi-layerfs.instance="$instance" "$volume"
 # Private SDK discovery and Pi control plane live outside any imported tree.
 docker run --rm -v "$volume:/layerfs-store" --entrypoint bash "$image_id" -c 'mkdir -p /layerfs-store/home; chmod 700 /layerfs-store/home; stat -f -c %T /layerfs-store'
 {
@@ -46,8 +40,8 @@ docker run --rm -v "$volume:/layerfs-store" --entrypoint bash "$image_id" -c 'mk
   printf 'export LAYERFS_VOLUME=%q\n' "$volume"
   printf 'export LAYERFS_HOME=%q\n' /layerfs-store/home
   printf 'export LAYERFS_DOCKER=%q\n' /var/run/docker.sock
-  printf 'export LAYERFS_DAEMON=%q\n' "$upstream/core/target/pi-bookworm/release/layerfs-daemon"
-  printf 'export LAYERFS_NATIVE=%q\n' "$upstream/core/target/pi-bookworm/layerfs.node"
+  printf 'export LAYERFS_DAEMON=%q\n' "$target/release/layerfs-daemon"
+  printf 'export LAYERFS_NATIVE=%q\n' "$target/layerfs.node"
   printf 'export LAYERFS_STORE_PATH=%q\n' /layerfs-store/global/store.sqlite
   printf 'export LAYERFS_CONTAINER_PREFIX=%q\n' "pi-lfs-$instance-"
   printf 'export PI_LAYERFS_INSTANCE=%q\n' "$instance"

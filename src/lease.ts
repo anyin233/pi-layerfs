@@ -8,8 +8,10 @@ import {
   stat,
   writeFile,
 } from "node:fs/promises";
+import { hostname } from "node:os";
 import { join } from "node:path";
 import { performance } from "node:perf_hooks";
+import { docker } from "./docker.js";
 import type { Value, Workspace } from "./runtime.js";
 
 // Workspaces live in Sandbox daemons, not in this process. A Pi process that
@@ -34,6 +36,9 @@ export type Held = {
 };
 export type LeaseRecord = {
   incarnation: string;
+  // The holding process, so a dead holder is recognized before expiry.
+  owner: string;
+  pid: number;
   agent: string;
   label: string;
   branch: string;
@@ -64,7 +69,10 @@ export class Lease {
   error: Value | undefined;
   constructor(
     readonly dir: string,
-    private describe: () => Omit<LeaseRecord, "incarnation" | "heartbeat">,
+    private describe: () => Omit<
+      LeaseRecord,
+      "incarnation" | "owner" | "pid" | "heartbeat"
+    >,
   ) {}
   get file() {
     return join(this.dir, `${this.id}.json`);
@@ -86,6 +94,8 @@ export class Lease {
       const temporary = `${this.file}.${randomUUID()}.tmp`;
       const record: LeaseRecord = {
         incarnation: this.id,
+        owner: await ownerIdentity(),
+        pid: process.pid,
         heartbeat: Date.now(),
         ...this.describe(),
       };
@@ -170,18 +180,63 @@ async function readRecord(
   }
 }
 
-// Heartbeat of an incarnation; undefined once it released or lost its lease.
-// A torn lease file falls back to its modification time.
-export async function heartbeatOf(dir: string, incarnation: string) {
-  const file = join(dir, `${incarnation}.json`);
-  const record = await readRecord(file);
-  if (record !== "unreadable") return record?.heartbeat;
+let identity: Promise<string> | undefined;
+// This process's container. Host networking gives containers the Engine
+// host's name, so the identity comes from Docker's per-container hostname
+// mount; a process outside any container is named by its host.
+export function ownerIdentity() {
+  identity ??= readFile("/proc/self/mountinfo", "utf8")
+    .then(
+      (info) => info.match(/\/containers\/([0-9a-f]{64})\//)?.[1],
+      (e) => {
+        if ((e as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+        throw e;
+      },
+    )
+    .then((id) => (id ? `container:${id}` : `host:${hostname()}`));
+  return identity;
+}
+// Only positive evidence counts: the holder's process is gone from this
+// container, or its container is removed or stopped. A holder elsewhere, or a
+// reused pid, waits for expiry instead.
+async function holderDead(record: LeaseRecord) {
+  if (record.owner === (await ownerIdentity())) {
+    try {
+      process.kill(record.pid, 0);
+      return false;
+    } catch (e) {
+      // EPERM: the pid exists under another user.
+      return (e as NodeJS.ErrnoException).code === "ESRCH";
+    }
+  }
+  const id = record.owner?.match(/^container:([0-9a-f]{64})$/)?.[1];
+  if (!id) return false;
   try {
-    return (await stat(file)).mtimeMs;
+    const container = await docker(`/containers/${id}/json`);
+    return !(container.State as { Running?: boolean } | undefined)?.Running;
   } catch (e) {
-    if ((e as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+    if (/: 404 /.test((e as Error).message)) return true;
     throw e;
   }
+}
+
+// Whether an incarnation's lease may be taken: its holder is provably dead,
+// or it released, lost or stopped beating its lease and this process confirmed
+// that. A torn lease file falls back to its modification time.
+export async function stale(dir: string, incarnation: string, watch: Watch) {
+  const file = join(dir, `${incarnation}.json`);
+  const record = await readRecord(file);
+  if (record !== "unreadable") {
+    if (record && (await holderDead(record))) return true;
+    return watch.expired(incarnation, record?.heartbeat);
+  }
+  let beat: number | undefined;
+  try {
+    beat = (await stat(file)).mtimeMs;
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
+  }
+  return watch.expired(incarnation, beat);
 }
 
 // Remembers when this process first saw each owner's current heartbeat.
@@ -203,7 +258,7 @@ export class Watch {
   }
 }
 
-// Takes every lease whose owner stopped beating, and claims left by a
+// Takes every lease whose owner died or stopped beating, and claims left by a
 // reclaimer that died, by an atomic rename that only one process wins.
 export async function claimExpired(dir: string, self: string, watch: Watch) {
   const claims: Claim[] = [],
@@ -216,8 +271,7 @@ export async function claimExpired(dir: string, self: string, watch: Watch) {
     const original = own?.[1] ?? taken?.[2] ?? "";
     // Own claims are retried; leases of this process are alive by definition.
     if (owner === self ? !taken : beating.has(owner)) continue;
-    if (owner !== self && !watch.expired(owner, await heartbeatOf(dir, owner)))
-      continue;
+    if (owner !== self && !(await stale(dir, owner, watch))) continue;
     const file = join(dir, `claim-${self}-${original}.json`);
     if (name !== `claim-${self}-${original}.json`) {
       try {

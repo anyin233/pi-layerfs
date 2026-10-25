@@ -7,7 +7,6 @@ import { join } from "node:path";
 import { createInterface } from "node:readline";
 import { loadConfig, required } from "../src/config.js";
 import { snapshot } from "../src/history.js";
-import { CONFIRM_MS, EXPIRY_MS, HEARTBEAT_MS } from "../src/lease.js";
 import { Operations } from "../src/operations.js";
 import { createRuntime, type Value } from "../src/runtime.js";
 
@@ -88,7 +87,9 @@ if (mode === "hold") {
   // 2. A session holding Workspaces is killed without cleanup.
   const holder = child("hold");
   const held = (await firstLine(holder)).held as Value[];
+  const exited = new Promise((resolve) => holder.once("exit", resolve));
   holder.kill("SIGKILL");
+  await exited;
   receipt("crash.held", held);
   const observer = await open("observer", "worker");
   await observer.initialize();
@@ -103,19 +104,10 @@ if (mode === "hold") {
   for (const key of orphans) assert.ok(before.includes(key), key);
   receipt("crash.orphans", before);
 
-  // 3. A live lease is never taken; after expiry a new session reclaims.
-  const early = await open("early-session");
-  await early.initialize();
-  assert.equal(early.recovery, undefined);
-  await early.shutdown();
-  await new Promise((r) => setTimeout(r, EXPIRY_MS + 1000));
+  // 3. The holder is provably dead, so the next session's initialization
+  // reclaims at once instead of waiting for its lease to expire.
   const recovering = await open("recovering-session");
   await recovering.initialize();
-  // The first sighting starts the monotonic confirmation; a heartbeat tick
-  // of this live lead then reclaims.
-  const deadline = Date.now() + CONFIRM_MS + 3 * HEARTBEAT_MS;
-  while (!recovering.recovery && Date.now() < deadline)
-    await new Promise((r) => setTimeout(r, 500));
   const recovery = required(recovering.recovery);
   receipt("recovery", recovery);
   assert.deepEqual(recovery.errors, []);

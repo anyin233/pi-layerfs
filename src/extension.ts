@@ -186,7 +186,7 @@ export default function layerfsExtension(
       const recovery = runtime.recovery;
       if (recovery && runtime.config.logLevel !== "silent")
         ctx.ui.notify(
-          `LayerFS reclaimed ${(recovery.reclaimed as Value[]).length} Workspace(s) of expired Pi sessions; ${(recovery.errors as Value[]).length} need attention (layerfs_status)`,
+          `LayerFS reclaimed ${(recovery.reclaimed as Value[]).length} Workspace(s) of ended Pi sessions; ${(recovery.pending as Value[]).length} await their command's timeout; ${(recovery.errors as Value[]).length} need attention (layerfs_status)`,
           (recovery.errors as Value[]).length ? "warning" : "info",
         );
       if (runtime.config.logLevel === "info")
@@ -360,7 +360,7 @@ export default function layerfsExtension(
   );
   tool(
     "layerfs_cleanup",
-    "Cancel owned background processes and discard/unmount owned Workspaces, then (lead only) reclaim Workspaces of Pi sessions whose heartbeat expired; report failures.",
+    "Cancel owned background processes and discard/unmount owned Workspaces, then (lead only) reclaim Workspaces of Pi sessions that died or whose heartbeat expired; report failures.",
     Type.Object({}),
     async () => {
       await get().cleanup();

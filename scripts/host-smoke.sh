@@ -28,7 +28,7 @@ source "$evidence/installation/package/scripts/host-platform.sh"
 layerfs_host_platform
 source "$evidence/installation/state/deployment.env"
 layerfs_docker_connect
-docker run --rm --platform linux/amd64 --mount "type=bind,source=$evidence,target=/evidence,readonly" --entrypoint node "$LAYERFS_IMAGE" -e '
+docker run --rm --mount "type=bind,source=$evidence,target=/evidence,readonly" --entrypoint node "$LAYERFS_IMAGE" -e '
 const fs=require("node:fs"), assert=require("node:assert/strict");
 const get=name=>JSON.parse(fs.readFileSync("/evidence/"+name+".json","utf8"));
 const a=get("project-a"), b=get("project-b");

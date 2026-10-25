@@ -16,7 +16,6 @@ while [[ $# -gt 0 ]]; do
     *) echo "Unknown installer option: $1" >&2; exit 1 ;;
   esac
 done
-case "$(uname -s):$(uname -m)" in Linux:x86_64|Darwin:x86_64|Darwin:arm64) ;; *) echo 'Requires Linux x86_64 or macOS (Intel/Apple Silicon).' >&2; exit 1 ;; esac
 # Verify the complete payload before sourcing its helpers or changing an installation.
 command -v docker >/dev/null
 if command -v sha256sum >/dev/null 2>&1; then
@@ -27,20 +26,19 @@ fi
 source "$bundle/host-platform.sh"
 layerfs_host_platform
 layerfs_docker_connect
-docker version --format '{{.Server.Version}}' >/dev/null
-# Check FUSE in the Linux VM on macOS, rather than requiring a Mac kernel extension.
 image=$(<"$bundle/IMAGE_ID")
 [[ "$image" =~ ^sha256:[a-f0-9]{64}$ ]] || { echo 'Invalid bundled image identity.' >&2; exit 1; }
 if ! docker image inspect "$image" >/dev/null 2>&1; then
   gzip -dc -- "$bundle/runtime-image.tar.gz" | docker load
 fi
-docker image inspect "$image" >/dev/null
+layerfs_image_check "$image"
+# FUSE comes from the Engine's Linux kernel (on macOS, its VM), not the Mac.
 layerfs_runtime_probe "$image"
 layerfs_macos_network_probe "$image"
 mkdir -p -- "$prefix" "$bin_dir"
 prefix=$(layerfs_canonical_dir "$prefix")
 bin_dir=$(layerfs_canonical_dir "$bin_dir")
-chmod 700 -- "$prefix"
+chmod 700 "$prefix"
 if [[ -e "$prefix/package" && ! -f "$prefix/.pi-layerfs-installation" ]]; then
   echo "Refusing to replace an unrecognized $prefix/package" >&2; exit 1
 fi
@@ -56,7 +54,7 @@ if [[ -e "$prefix/package" ]]; then
 fi
 mv -- "$stage/package" "$prefix/package"
 mkdir -p -- "$prefix/state"
-chmod 700 -- "$prefix/state"
+chmod 700 "$prefix/state"
 instance=$(printf '%s' "$prefix" | layerfs_sha256 | cut -c1-12)
 volume="pi-layerfs-$instance-store"
 if docker volume inspect "$volume" >/dev/null 2>&1; then
@@ -65,7 +63,7 @@ if docker volume inspect "$volume" >/dev/null 2>&1; then
 else
   docker volume create --label "pi-layerfs.instance=$instance" "$volume" >/dev/null
 fi
-docker run --rm --platform linux/amd64 -v "$volume:/layerfs-store" --entrypoint bash "$image" -c 'mkdir -p /layerfs-store/home /layerfs-store/pi-agent; chmod 700 /layerfs-store/home /layerfs-store/pi-agent'
+docker run --rm -v "$volume:/layerfs-store" --entrypoint bash "$image" -c 'mkdir -p /layerfs-store/home /layerfs-store/pi-agent; chmod 700 /layerfs-store/home /layerfs-store/pi-agent'
 {
   printf 'export LAYERFS_HOME=%q\n' /layerfs-store/home
   printf 'export LAYERFS_IMAGE=%q\n' "$image"
@@ -78,16 +76,15 @@ docker run --rm --platform linux/amd64 -v "$volume:/layerfs-store" --entrypoint 
   printf 'export LAYERFS_CONTAINER_PREFIX=%q\n' "pi-lfs-$instance-"
   printf 'export PI_LAYERFS_INSTANCE=%q\n' "$instance"
   printf 'export PI_LAYERFS_HOST_DOCKER=%q\n' "$PI_LAYERFS_HOST_DOCKER"
-  printf 'export LAYERFS_DAEMON_HOST=%q\n' 127.0.0.1
 } > "$prefix/state/deployment.env"
-chmod 600 -- "$prefix/state/deployment.env"
+chmod 600 "$prefix/state/deployment.env"
 printf '%s\n' pi-layerfs > "$prefix/.pi-layerfs-installation"
-chmod +x -- "$prefix/package/bin/pi-layerfs"
+chmod +x "$prefix/package/bin/pi-layerfs"
 {
   printf '#!/usr/bin/env bash\n'
   printf 'exec %q "$@"\n' "$prefix/package/bin/pi-layerfs"
 } > "$bin_dir/pi-layerfs"
-chmod +x -- "$bin_dir/pi-layerfs"
+chmod +x "$bin_dir/pi-layerfs"
 if $register && command -v pi >/dev/null 2>&1; then
   PI_OFFLINE=1 pi install "$prefix/package"
 fi

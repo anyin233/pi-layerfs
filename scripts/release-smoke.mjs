@@ -222,6 +222,10 @@ try {
     JSON.stringify(receipt, null, 2),
   );
   console.log(JSON.stringify(receipt, null, 2));
+} catch (error) {
+  // Cleanup below can fail in turn; report the original failure first.
+  console.error("Self-test failed:", error);
+  throw error;
 } finally {
   for (const worker of workers) await worker.pi.close();
   if (parent) await parent.close();

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import {
   mkdir,
   mkdtemp,
@@ -20,7 +21,7 @@ import {
   validateEnvironment,
   verifyStoreMount,
 } from "../src/config.js";
-import { leaseHolders, Watch } from "../src/lease.js";
+import { leaseHolders, ownerIdentity, Watch } from "../src/lease.js";
 import type { Connect } from "../src/ports.js";
 import {
   branchPath,
@@ -196,7 +197,12 @@ test("host platform, Node and environment are validated without fallback", async
     for (const k of Object.keys(process.env))
       if (k.startsWith("LAYERFS_") || k.startsWith("DSH_LAYERFS_"))
         delete process.env[k];
-    await assert.rejects(validateEnvironment("/tmp"), /Missing LAYERFS_HOME/);
+    // The plugin itself always runs in the Linux container; a macOS developer
+    // host reaches the platform refusal first.
+    await assert.rejects(
+      validateEnvironment("/tmp"),
+      process.platform === "linux" ? /Missing LAYERFS_HOME/ : /requires Linux/,
+    );
   } finally {
     process.env = before;
   }
@@ -508,6 +514,34 @@ test("Store filesystem and Docker volume identity must match", () => {
       ),
     /Unsupported/,
   );
+  // OrbStack: Engine data root is the btrfs subvolume /docker.
+  const vm =
+    "1 0 0:38 / / rw - overlay overlay rw\n760 743 0:38 /docker/volumes/test/_data /layerfs-store rw,noatime master:69 - btrfs /dev/vdb1 rw,subvol=/docker";
+  assert.equal(
+    verifyStoreMount(
+      vm,
+      "/layerfs-store",
+      "/var/lib/docker/volumes/test/_data",
+    ),
+    "btrfs",
+  );
+  for (const other of [
+    "/var/lib/docker/volumes/other/_data",
+    "/var/lib/docker/volumes/xtest/_data",
+  ])
+    assert.throws(
+      () => verifyStoreMount(vm, "/layerfs-store", other),
+      /share one Store/,
+    );
+  assert.throws(
+    () =>
+      verifyStoreMount(
+        vm.replace("/docker/volumes/test/_data", "/_data"),
+        "/layerfs-store",
+        "/var/lib/docker/volumes/test/_data",
+      ),
+    /share one Store/,
+  );
 });
 test("cancel waits for exec completion before discard and cleanup", async () => {
   const f = await fixture();
@@ -673,12 +707,14 @@ async function writeLease(
   heartbeat: number,
   workspaces: Value[],
   processes: string[] = [],
+  holder: Value = {},
 ) {
   await mkdir(r.lease.dir, { recursive: true });
   await writeFile(
     join(r.lease.dir, `${id}.json`),
     JSON.stringify({
       incarnation: id,
+      ...holder,
       agent: id,
       label: "crashed",
       branch: "pi-work",
@@ -865,7 +901,14 @@ test("a refused reclamation stays claimed by the live reclaimer; only a conflict
     await other.reclaim();
     assert.ok((await readdir(r.lease.dir)).includes(claimed));
     commitError = { code: "Conflict", detail: { conflicts: ["a"] } };
-    assert.equal(((await r.reclaim()).errors as Value[])[0].code, "Busy");
+    // Still running the dead session's command: pending, kept and retried.
+    const busyPass = await r.reclaim();
+    assert.deepEqual(busyPass.errors, []);
+    assert.deepEqual(
+      (busyPass.pending as Value[]).map((w) => w.sandbox),
+      ["2"],
+    );
+    assert.ok((await readdir(r.lease.dir)).includes(claimed));
     busy = false;
     const last = await r.reclaim();
     assert.deepEqual(last.errors, []);
@@ -899,6 +942,70 @@ test("a lease that was taken over makes its runtime refuse instead of re-owning"
     assert.ok(
       !(await readdir(victim.lease.dir)).includes(`${victim.lease.id}.json`),
     );
+  } finally {
+    await f.cleanup();
+  }
+});
+test("a dead holder's fresh lease is reclaimed at once by the next session; a live holder's is not", async () => {
+  const f = await fixture();
+  try {
+    const first = f.create();
+    await first.initialize();
+    await first.shutdown();
+    const owner = await ownerIdentity();
+    const live = "22222222-2222-4222-8222-222222222222";
+    await writeLease(
+      first,
+      DEAD,
+      Date.now(),
+      [
+        {
+          sandbox: "2",
+          path: "/workspaces/1",
+          container: "c-2",
+          retained: false,
+        },
+      ],
+      [],
+      { owner, pid: required(spawnSync("true").pid) },
+    );
+    await writeLease(
+      first,
+      live,
+      Date.now(),
+      [
+        {
+          sandbox: "3",
+          path: "/workspaces/1",
+          container: "c-3",
+          retained: false,
+        },
+      ],
+      [],
+      { owner, pid: process.pid },
+    );
+    await sandboxRecord(f.home, "2", "c-2");
+    await sandboxRecord(f.home, "3", "c-3");
+    const unmounted: string[] = [];
+    f.sdk.workspace.unmount = async (ws, discard) => {
+      unmounted.push(`${ws.sandbox}:${discard}`);
+      return { kind: "Unmounted" };
+    };
+    // The default Watch: expiry alone would take a minute and a confirmation.
+    const r = f.create();
+    await r.initialize();
+    assert.deepEqual(unmounted, ["2:true"]);
+    assert.deepEqual(
+      (required(r.recovery).reclaimed as Value[]).map((w) => w.sandbox),
+      ["2"],
+    );
+    const remaining = (await leaseRecords(r)).map((l) => l.incarnation).sort();
+    assert.deepEqual(remaining, [live, r.lease.id].sort());
+    const own = (await leaseRecords(r)).find(
+      (l) => l.incarnation === r.lease.id,
+    );
+    assert.deepEqual([own.owner, own.pid], [owner, process.pid]);
+    await r.shutdown();
   } finally {
     await f.cleanup();
   }

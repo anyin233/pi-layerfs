@@ -22,6 +22,8 @@ Usage: pi-layerfs [--project DIR] [--state DIR] [Pi options/prompts]
 Each project gets its own Store volume. Host projects are mounted read-only.
 Model credentials and Pi settings share a private control volume outside all
 projects. Use Pi's /login to sign in. --self-test needs no model credentials.
+On macOS, Docker runs in the OrbStack or Docker Desktop VM. Networking is host
+mode; PI_LAYERFS_NETWORK=bridge is for Engines without host networking.
 Install the complete release bundle before starting this launcher.
 HELP
       exit 0 ;;
@@ -34,10 +36,21 @@ layerfs_host_platform
 # Generated locally by install.sh in a private 0700 directory.
 source "$state_dir/deployment.env"
 layerfs_docker_connect
+layerfs_image_check "$LAYERFS_IMAGE"
 # Inside the client and sandbox, use the Engine VM socket, never the Mac proxy.
 export LAYERFS_DOCKER=/var/run/docker.sock
-export LAYERFS_DAEMON_HOST=${LAYERFS_DAEMON_HOST:-127.0.0.1}
-docker image inspect "$LAYERFS_IMAGE" >/dev/null
+# Host networking joins the Engine host's (on macOS, the VM's) namespace, where
+# each daemon publishes its port on 127.0.0.1. OrbStack forwards that loopback
+# to macOS for the dashboard; Docker Desktop needs its host networking setting.
+# Bridge mode dials daemons through host.docker.internal instead. OrbStack
+# forwards those ports asynchronously and a fresh Sandbox can be refused at
+# Connect there; bridge is for Engines without host networking.
+network=${PI_LAYERFS_NETWORK:-host}
+case "$network" in
+  host) daemon_host=${LAYERFS_DAEMON_HOST:-127.0.0.1} ;;
+  bridge) daemon_host=${LAYERFS_DAEMON_HOST:-host.docker.internal} ;;
+  *) echo 'PI_LAYERFS_NETWORK must be host or bridge.' >&2; exit 1 ;;
+esac
 if [[ "$mode" == test ]]; then layerfs_macos_network_probe "$LAYERFS_IMAGE"; fi
 project_dir=$(layerfs_canonical_dir "$project_dir")
 control_volume=${PI_LAYERFS_CONTROL_VOLUME:-$LAYERFS_VOLUME}
@@ -59,7 +72,11 @@ if docker volume inspect "$LAYERFS_VOLUME" >/dev/null 2>&1; then
 else
   docker volume create --label "pi-layerfs.instance=$PI_LAYERFS_INSTANCE" --label "pi-layerfs.project-key=$identity" "$LAYERFS_VOLUME" >/dev/null
 fi
-docker run --rm --platform linux/amd64 -v "$LAYERFS_VOLUME:/layerfs-store" --entrypoint bash "$LAYERFS_IMAGE" -c 'mkdir -p /layerfs-store/home; chmod 700 /layerfs-store/home'
+# Linux hosts share their kernel with Docker; on macOS the Engine's Linux VM
+# supplies FUSE. Either way the Engine's /dev/fuse is checked here.
+docker run --rm --device /dev/fuse -v "$LAYERFS_VOLUME:/layerfs-store" --entrypoint bash "$LAYERFS_IMAGE" \
+  -c 'test -c /dev/fuse || { echo "The Docker Engine provides no /dev/fuse." >&2; exit 1; }; mkdir -p /layerfs-store/home; chmod 700 /layerfs-store/home' \
+  || { echo 'Docker setup failed; LayerFS needs FUSE in the Engine kernel (/dev/fuse).' >&2; exit 1; }
 mounts=(-v "$LAYERFS_VOLUME:/layerfs-store" -v "$control_volume:/pi-control" -v "$PI_LAYERFS_ENGINE_SOCKET:$LAYERFS_DOCKER")
 if [[ "$mode" != test ]]; then
   [[ "$project_dir" != *,* ]] || { echo 'Project paths containing commas are unsupported by Docker bind mounts.' >&2; exit 1; }
@@ -84,11 +101,17 @@ else
   if $manage; then command+=(--layerfs-manage); fi
   command+=("$@")
 fi
-launch=(env -u DOCKER_CONTEXT -u DOCKER_HOST docker --host "$PI_LAYERFS_HOST_DOCKER" run --rm --platform linux/amd64 "${terminal[@]}" --network host "${mounts[@]}"
+networking=(--network "$network" -e "LAYERFS_DAEMON_HOST=$daemon_host")
+if [[ "$network" == bridge ]]; then
+  # The dashboard listens on the container interface; Docker publishes it on
+  # the host's loopback only, and the plugin reads the assigned host port.
+  networking+=(-p 127.0.0.1::47681 -e PI_LAYERFS_DASHBOARD_LISTEN=0.0.0.0:47681)
+fi
+launch=(env -u DOCKER_CONTEXT -u DOCKER_HOST docker --host "$PI_LAYERFS_HOST_DOCKER" run --rm "${terminal[@]}" "${networking[@]}" "${mounts[@]}"
   --label "pi-layerfs.instance=$PI_LAYERFS_INSTANCE"
   -e LAYERFS_HOME -e LAYERFS_DOCKER -e LAYERFS_IMAGE -e LAYERFS_VOLUME
   -e LAYERFS_DAEMON -e LAYERFS_NATIVE -e LAYERFS_STORE_PATH -e LAYERFS_CONTAINER_PREFIX
-  -e PI_LAYERFS_INSTANCE -e PI_LAYERFS_VOLUME_ROOT -e LAYERFS_DAEMON_HOST
+  -e PI_LAYERFS_INSTANCE -e PI_LAYERFS_VOLUME_ROOT
   -e PI_LAYERFS_PLUGIN=/opt/pi-layerfs
   -e PI_CODING_AGENT_DIR=/pi-control/pi-agent
   -e PI_OFFLINE=1 -e PI_SKIP_VERSION_CHECK=1

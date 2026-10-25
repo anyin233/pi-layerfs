@@ -447,6 +447,23 @@ test("loopback dashboard requires bearer auth and rejects cross-origin/mutating 
     await f.close();
   }
 });
+test("dashboard refuses a malformed published listen address", async () => {
+  const f = await fixture();
+  const c = new Control(f.runtime);
+  await c.ready();
+  const saved = process.env.PI_LAYERFS_DASHBOARD_LISTEN;
+  process.env.PI_LAYERFS_DASHBOARD_LISTEN = "47681";
+  const dashboard = new Dashboard(c);
+  try {
+    await assert.rejects(dashboard.start(), /ADDRESS:PORT/);
+  } finally {
+    if (saved === undefined) delete process.env.PI_LAYERFS_DASHBOARD_LISTEN;
+    else process.env.PI_LAYERFS_DASHBOARD_LISTEN = saved;
+    await dashboard.close();
+    await c.close();
+    await f.close();
+  }
+});
 test("browser page JavaScript parses and data rendering uses text nodes", () => {
   const script = dashboardPage.match(/<script[^>]*>([\s\S]*)<\/script>/)?.[1];
   assert.ok(script);

@@ -23,8 +23,8 @@ import {
 } from "./config.js";
 import {
   claimExpired,
-  heartbeatOf,
   Lease,
+  stale,
   Watch,
   workspaceGone,
   workspaceKey,
@@ -362,14 +362,15 @@ export class Runtime {
       if (reclaims) await this.reclaim();
     });
   }
-  // Takes over Workspaces and processes of Pi processes of this Store whose
-  // heartbeat expired. Retained Workspaces are committed to their own Branch
-  // first. A conflict cannot be resolved without its owner, so it is reported
-  // and the overlay discarded; any other failure keeps the claim for a retry.
+  // Takes over Workspaces and processes of Pi processes of this Store that
+  // died or whose heartbeat expired. Retained Workspaces are committed to their
+  // own Branch first. A conflict cannot be resolved without its owner, so it is
+  // reported and the overlay discarded; any other failure keeps the claim for a
+  // retry.
   reclaim(): Promise<Value> {
     // Before the client is open, a later heartbeat or initialize reclaims.
     if (this.stopped || this.failure || !this.sdk)
-      return Promise.resolve({ reclaimed: [], errors: [] });
+      return Promise.resolve({ reclaimed: [], pending: [], errors: [] });
     this.reclaiming ??= this.reclaimOnce().finally(() => {
       this.reclaiming = undefined;
     });
@@ -377,6 +378,7 @@ export class Runtime {
   }
   private async reclaimOnce() {
     const reclaimed: Value[] = [],
+      pending: Value[] = [],
       errors: Value[] = [];
     try {
       const scan = await claimExpired(
@@ -386,7 +388,8 @@ export class Runtime {
       );
       errors.push(...scan.errors);
       for (const { file, record } of scan.claims) {
-        const failed = errors.length;
+        const failed = errors.length,
+          waiting = pending.length;
         const owner = { agent: record.agent, label: record.label };
         for (const id of record.processes) {
           try {
@@ -430,23 +433,28 @@ export class Runtime {
             reclaimed.push(entry);
           } catch (e) {
             if (workspaceGone(e)) reclaimed.push({ ...entry, gone: true });
+            // The dead session's command still runs until its own timeout.
+            else if (errorData(e).code === "Busy") pending.push(entry);
             else errors.push({ phase: "reclaim", ...entry, ...errorData(e) });
           }
         }
-        // A claim with failures stays owned by this lease and is retried.
-        if (errors.length === failed) await rm(file, { force: true });
+        // An unfinished claim stays owned by this lease and is retried.
+        if (errors.length === failed && pending.length === waiting)
+          await rm(file, { force: true });
       }
     } catch (e) {
       errors.push({ phase: "scan", ...errorData(e) });
     }
-    const pass = { time: Date.now(), reclaimed, errors };
-    if (reclaimed.length || errors.length) this.recovery = pass;
+    const pass = { time: Date.now(), reclaimed, pending, errors };
+    if (reclaimed.length || pending.length || errors.length)
+      this.recovery = pass;
     return pass;
   }
-  // Only the first capture needs exclusion. A lock whose owner's lease expired
-  // is taken over only when no capture began (no binding was written), since
-  // an interrupted LayerFS.init has an unknown outcome. The capture's intent
-  // is created exclusively, so even a racing takeover runs one LayerFS.init.
+  // Only the first capture needs exclusion. A lock whose owner died or whose
+  // lease expired is taken over only when no capture began (no binding was
+  // written), since an interrupted LayerFS.init has an unknown outcome. The
+  // capture's intent is created exclusively, so even a racing takeover runs one
+  // LayerFS.init.
   private async lockBinding(lock: string, file: string) {
     const owner = join(lock, "owner");
     const watch = new Watch(this.watch.confirmMs);
@@ -460,21 +468,21 @@ export class Runtime {
       }
       const holder = await lockOwner(lock);
       const expired = holder
-        ? watch.expired(holder, await heartbeatOf(this.lease.dir, holder))
+        ? await stale(this.lease.dir, holder, watch)
         : Date.now() >= deadline;
       if (!expired) continue;
       if (await exists(file))
         throw new Error(
           "LayerFS initialization was interrupted; inspect pi-bindings and the Store before explicit recovery",
         );
-      const stale = `${lock}.stale-${randomUUID()}`;
+      const aside = `${lock}.stale-${randomUUID()}`;
       try {
-        await rename(lock, stale);
+        await rename(lock, aside);
       } catch (e) {
         if ((e as NodeJS.ErrnoException).code === "ENOENT") continue;
         throw e;
       }
-      await rm(stale, { recursive: true });
+      await rm(aside, { recursive: true });
     }
   }
   private async initializeOnce() {
