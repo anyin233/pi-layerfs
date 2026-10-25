@@ -9,6 +9,7 @@ import {
   realpath,
   rename,
   rm,
+  stat,
   writeFile,
 } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
@@ -230,6 +231,10 @@ async function lockOwner(lock: string) {
 
 // Workspaces one Sandbox holds (LayerFS 1.1.0 agent guide).
 const SANDBOX_CAPACITY = 16;
+// A Workspace mounted within about a second of its Sandbox starting cannot be
+// unmounted (Ephemeral-AI-Lab/layerfs#426, open at 1.1.0), so mounts wait
+// until the Sandbox is this old.
+const SANDBOX_SETTLE_MS = 1500;
 type Binding = {
   version: 1;
   root: string;
@@ -298,13 +303,28 @@ export class Runtime {
     );
     if (free)
       try {
+        await this.settle(String(free.sandbox));
         return await this.sdk.workspace.mount(String(free.sandbox), branch);
       } catch (e) {
         const code = (e as { code?: unknown })?.code;
         if (code !== "NoSuchSandbox" && code !== "Capacity") throw e;
       }
     const { sandbox } = await this.sdk.sandbox.create({ image });
+    await this.settle(sandbox);
     return this.sdk.workspace.mount(sandbox, branch);
+  }
+  // The Sandbox's discovery record is written as it starts; without one, its
+  // age is unknown and the full settle time is waited.
+  private async settle(sandbox: string) {
+    let started = Date.now();
+    try {
+      started = (await stat(this.record(sandbox))).mtimeMs;
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
+    }
+    const wait =
+      started + (this.options.settle ?? SANDBOX_SETTLE_MS) - Date.now();
+    if (wait > 0) await sleep(wait);
   }
   serial<T>(fn: () => Promise<T>): Promise<T> {
     const next = this.queue.then(fn);
@@ -327,16 +347,18 @@ export class Runtime {
     this.persistent.delete(key);
     await this.lease.write();
   }
-  private async container(sandbox: string) {
-    const file = join(
+  private record(sandbox: string) {
+    return join(
       required({ ...environment(), ...this.options.deployment }.HOME),
       this.config.project,
       "sandboxes",
       sandbox,
       "container",
     );
+  }
+  private async container(sandbox: string) {
     try {
-      return (await readFile(file, "utf8")).trim();
+      return (await readFile(this.record(sandbox), "utf8")).trim();
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code === "ENOENT") return undefined;
       throw e;

@@ -7,10 +7,11 @@ macFUSE, host Node/npm/Rust or LayerFS checkout is needed to install. FUSE
 comes from the VM kernel, and Stores live in ordinary Docker volumes on the
 VM's own disk (btrfs on OrbStack, ext4 on Docker Desktop), never on APFS.
 
-**Status:** macOS has not been verified with LayerFS 1.1.0, and no macOS
-archive is part of the v0.1.0 release. Results recorded with the previous
-LayerFS revision are not carried over; run the acceptance procedure below on a
-real Mac before relying on it. A passing Linux run, or a simulated Darwin
+**Status:** the source-built `linux/arm64` archive passed the real-host
+acceptance below with LayerFS 1.1.0 on an Apple Silicon Mac with OrbStack; see
+the [verification record](verification.md#macos-apple-silicon-orbstack).
+Intel Macs and Docker Desktop are not verified with 1.1.0, and no macOS archive
+is part of the v0.1.0 release. A passing Linux run, or a simulated Darwin
 `uname`, is not proof of macOS compatibility.
 
 | Mac | Engine architecture | Release archive |

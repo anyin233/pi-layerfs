@@ -21,6 +21,8 @@ export type RuntimeOptions = {
   // This process's running Init of the project, read while LayerFS.init runs.
   progress?: () => Promise<Value>;
   trace?: string;
+  // Minimum Sandbox age before a mount, in milliseconds.
+  settle?: number;
 };
 export function invoke(
   target: unknown,

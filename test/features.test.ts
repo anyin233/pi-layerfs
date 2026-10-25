@@ -162,6 +162,7 @@ async function fixture() {
   const options = {
     agent: randomUUID(),
     label: "lead",
+    settle: 0,
     deployment: {
       HOME: home,
       STORE_PATH: join(dir, "store/global/store.sqlite"),

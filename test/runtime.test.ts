@@ -7,6 +7,7 @@ import {
   readFile,
   rm,
   stat,
+  utimes,
   writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -159,7 +160,7 @@ async function fixture() {
         environment: {},
         filesystem: "ext4",
       }),
-      options,
+      { settle: 0, ...options },
     );
   return {
     root,
@@ -542,6 +543,26 @@ test("Store filesystem and Docker volume identity must match", () => {
       ),
     /share one Store/,
   );
+});
+test("mounts wait until the Sandbox has settled since it started", async () => {
+  const f = await fixture();
+  try {
+    const r = f.create(config, { settle: 400 });
+    await r.initialize();
+    const record = join(f.home, config.project, "sandboxes", "1");
+    await mkdir(record, { recursive: true });
+    await writeFile(join(record, "container"), "c1\n");
+    let started = Date.now();
+    await r.bash("true");
+    assert.ok(Date.now() - started >= 350, "young Sandbox waited");
+    const old = new Date(Date.now() - 10_000);
+    await utimes(join(record, "container"), old, old);
+    started = Date.now();
+    await r.bash("true");
+    assert.ok(Date.now() - started < 350, "settled Sandbox did not wait");
+  } finally {
+    await f.cleanup();
+  }
 });
 test("cancel waits for exec completion before discard and cleanup", async () => {
   const f = await fixture();

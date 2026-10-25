@@ -8,7 +8,7 @@ Qualified against **Pi 1.4.0** and LayerFS revision **`ad78914e36b258b360daf13ae
 
 Each release archive includes the plugin, pinned LayerFS SDK, native binding, daemon, Pi 1.4.0 and a complete Docker runtime image for one Engine architecture: `linux-x64` (Linux x86_64, Intel Macs) or `linux-arm64` (Linux arm64, Apple Silicon). Installing the archive performs **no network downloads** and needs no host Rust, Node, npm, private SDK package or LayerFS checkout. A Docker Engine reached through its Unix socket, `/dev/fuse` in the Engine's Linux kernel, Bash/tar/gzip and plain local Docker volumes on **ext4, xfs or btrfs** are required. Model credentials are configured separately.
 
-**macOS** is supported through OrbStack or Docker Desktop, whose Linux VM provides FUSE and the volume filesystem; macOS itself needs no macFUSE, Node, Rust or LayerFS checkout. macOS has not yet been verified with LayerFS 1.1.0, and no macOS archive is part of the v0.1.0 release. See [macOS](docs/macos.md) for building the arm64 archive, Docker contexts, networking and dashboard notes, and the real-host acceptance procedure.
+**macOS** is supported through OrbStack or Docker Desktop, whose Linux VM provides FUSE and the volume filesystem; macOS itself needs no macFUSE, Node, Rust or LayerFS checkout. The source-built `linux/arm64` archive passed the real-host acceptance with LayerFS 1.1.0 on an Apple Silicon Mac with OrbStack ([record](docs/verification.md#macos-apple-silicon-orbstack)); no macOS archive is part of the v0.1.0 release. See [macOS](docs/macos.md) for building the arm64 archive, Docker contexts, networking and dashboard notes, and the real-host acceptance procedure.
 
 Download the full archive and checksums from [GitHub Releases](https://github.com/anyin233/pi-layerfs/releases/latest):
 
@@ -150,6 +150,8 @@ Initialization is once per source/Store binding. `main` begins at L0; after publ
 ## Limits and recovery
 
 Pi's known hashline mutators (`replace`, `replace_match`, `insert`, `copy`, `move`, `undo_last_change`) and `powershell` are blocked through `tool_call`. Other extensions, unregistered tools and direct host APIs can bypass this integration. A Workspace is not a security sandbox. File tools preserve only metadata supported by the SDK; use Workspace commands for other supported filesystem work.
+
+LayerFS 1.1.0 can leave a Workspace unremovable (`Retained(TeardownCustody { stage: Join })` on unmount, [layerfs#426](https://github.com/Ephemeral-AI-Lab/layerfs/issues/426)). Its deterministic trigger, a mount within about a second of its Sandbox starting, is avoided: mounts wait until the Sandbox is 1.5 seconds old, judged by its discovery record. The rarer variant, seen after a command timed out, still occurs; the Workspace then blocks project operations as described below, and a new session in a fresh Sandbox is the way out until LayerFS fixes it.
 
 Foreground `workspace.exec` has no public AbortSignal or foreground process handle. Cancellation is deferred until execution/GNU timeout returns, with a 2-second TERM-to-KILL grace. An abort after commit begins cannot roll it back. Do not daemonize through ordinary Bash; use the process tool. Interrupted workers are not automatically replayed.
 

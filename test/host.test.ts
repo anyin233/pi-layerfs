@@ -4,6 +4,7 @@ import {
   chmod,
   mkdir,
   mkdtemp,
+  realpath,
   rm,
   symlink,
   writeFile,
@@ -68,7 +69,9 @@ test("host routing refuses a remote Docker endpoint before using its Engine", ()
 });
 
 test("portable host hashing and canonical paths do not require GNU sha256sum or realpath", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "pi-layerfs-portable-unit-"));
+  const dir = await realpath(
+    await mkdtemp(join(tmpdir(), "pi-layerfs-portable-unit-")),
+  );
   try {
     const bin = join(dir, "bin");
     const target = join(dir, "real directory");
