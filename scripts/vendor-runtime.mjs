@@ -5,9 +5,11 @@ import {
   access,
   chmod,
   copyFile,
+  cp,
   mkdir,
   readdir,
   readFile,
+  rm,
   writeFile,
 } from "node:fs/promises";
 import { dirname, join, relative, resolve } from "node:path";
@@ -15,7 +17,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const source = resolve(process.argv[2] ?? ".build/layerfs");
-const revision = "1aa56ece78e2ecd71b46cf07076100345df47239";
+const revision = "ad78914e36b258b360daf13aec164b5655814689";
 function run(program, args) {
   const result = spawnSync(program, args, {
     encoding: "utf8",
@@ -30,14 +32,27 @@ assert.equal(
   "",
   "Upstream source must match the qualified revision",
 );
+// Unmodified packages, side by side as npm installs them, so @layerfs/backend
+// resolves its bare @layerfs/agent import to the one copy this package loads.
+for (const [from, to] of [
+  ["api/agent/sdk", "vendor/layerfs/node_modules/@layerfs/agent"],
+  ["api/backend", "vendor/layerfs/node_modules/@layerfs/backend"],
+]) {
+  await rm(join(root, to), { recursive: true, force: true });
+  for (const name of ["package.json", "src"])
+    await cp(join(source, from, name), join(root, to, name), {
+      recursive: true,
+    });
+}
 const destinations = [
   [
     "core/target/pi-bookworm/release/layerfs-daemon",
     "vendor/layerfs/bin/layerfs-daemon",
   ],
   [
+    // Where @layerfs/agent's default addon path (<package>/../../binding) resolves.
     "core/target/pi-bookworm/layerfs.node",
-    "vendor/layerfs/sdk/js/native/layerfs.node",
+    "vendor/layerfs/node_modules/binding/layerfs.node",
   ],
 ];
 const artifacts = [];
@@ -75,6 +90,7 @@ try {
   throw new Error("Cannot read locked Cargo dependency metadata", { cause });
 }
 const licensesRoot = join(root, "vendor/layerfs/licenses");
+await rm(licensesRoot, { recursive: true, force: true });
 await mkdir(licensesRoot, { recursive: true });
 const index = [];
 async function licenseFiles(directory, depth = 0) {

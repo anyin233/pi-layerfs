@@ -2,7 +2,7 @@
 
 A Pi extension for persistent, branchable LayerFS projects, with project management, independent worker agents, retained Workspaces, background processes, and a local Work / History / Files / Storage dashboard.
 
-Qualified against **Pi 1.4.0** and LayerFS revision **`1aa56ece78e2ecd71b46cf07076100345df47239`** (JavaScript SDK 1.0.0 source). It uses public extension and AgentSession APIs without modifying Pi core. See the [DSH capability mapping](docs/dsh-parity.md) and [verification record](docs/verification.md).
+Qualified against **Pi 1.4.0** and LayerFS revision **`ad78914e36b258b360daf13aec164b5655814689`** (LayerFS 1.1.0: `@layerfs/agent` and `@layerfs/backend` source). It uses public extension and AgentSession APIs without modifying Pi core. See the [DSH capability mapping](docs/dsh-parity.md) and [verification record](docs/verification.md).
 
 ## Install the self-contained release
 
@@ -81,7 +81,7 @@ Commands:
 /layerfs minimalist          keep Bash and LayerFS workflow tools
 ```
 
-Project initialization is asynchronous. Inspect its job ID or dashboard progress. The preliminary metadata scan counts ignored entries and hardlinked byte identities without traversing symlinks. Operator progress describes completed work, not guaranteed totals. Imports capture the SDK-supported complete tree, including ignored files; credential files are refused rather than silently excluded. The preflight inspects regular files only (imports store symlinks as links): `.env*` except `.env.example/.sample/.template/.dist`, `auth.json`, `credentials[.json]`, `id_rsa/ed25519/ecdsa/dsa`, Store files, and `.pem`/`.key` files that contain a private key. Public certificate bundles such as certifi's `cacert.pem` and directories named `credentials` no longer block importing a complete `.venv`. Sources, Stores and private state must remain separate.
+Project initialization is asynchronous. Inspect its job ID or dashboard progress. The preliminary metadata scan counts ignored entries and hardlinked byte identities without traversing symlinks. Native Init progress describes completed work, not guaranteed totals. Imports capture the SDK-supported complete tree, including ignored files; credential files are refused rather than silently excluded. The preflight inspects regular files only (imports store symlinks as links): `.env*` except `.env.example/.sample/.template/.dist`, `auth.json`, `credentials[.json]`, `id_rsa/ed25519/ecdsa/dsa`, Store files, and `.pem`/`.key` files that contain a private key. Public certificate bundles such as certifi's `cacert.pem` and directories named `credentials` no longer block importing a complete `.venv`. Sources, Stores and private state must remain separate.
 
 New projects receive separate labelled Docker volumes. Removal requires exact name confirmation, an owned volume, no lease of another process on the project (expired leases are reclaimed first, waiting one 20-second confirmation interval if any looks expired) and no mounted Workspaces; stopping empty Sandboxes requires `stopSandboxes`. Viewing, selecting and removing share admission locks. Source folders and session/call journals are preserved. The original deployment volume is protected. Uncertain imports retain their registry/home/volume evidence for inspection instead of being automatically replayed or deleted.
 
@@ -96,7 +96,7 @@ All managed project operations use real LayerFS; unavailable access fails closed
 | `layerfs_branch` | List/fork/switch, merge into a new named Branch, lead-only publish, Branch/Commit differences |
 | `layerfs_fs` | Historical read/list/stat/blame/diff, text/base64 writes, edit, mkdir/cp/mv/rm/apply |
 | `layerfs_workspace` | Mount one retained Workspace, execute, commit, unmount; inspect retained changes/conflicts |
-| `layerfs_process` | Start/list/cancel background processes through the official operator API |
+| `layerfs_process` | Start/list/cancel background processes through `@layerfs/backend` |
 | `layerfs_inspect` | Native snapshot/storage/file/Workspace diagnostics, call journals and byte-cursor history pages |
 | `layerfs_project` | `list`, `select`, `init`, `job`, `remove` |
 | `layerfs_agent` | `spawn`, `list`, `message`, `cancel` for lead-owned Pi workers |
@@ -124,7 +124,7 @@ Use `layerfs_workspace` for state retained between commands and `layerfs_process
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `sdk` | Bundled SDK | Optional installed package or explicit path to `src/index.js` |
+| `sdk` | Bundled SDK | Optional installed `@layerfs/agent` or explicit path to its `src/index.js`; `@layerfs/backend` must resolve from there |
 | `project` | Required | Initial deployment project; management can select another registered project |
 | `branch` | `pi-work` | Deterministic writable Branch; `main` is refused; session switches persist |
 | `initialize` | `false` | Permission for initial complete-tree capture; existing bindings need no reimport |
@@ -204,4 +204,4 @@ The original real smoke verifies SDK/daemon/Store operations, Pi extension loadi
 
 The recovery smoke (`npm run test:recovery` through the client, on a dedicated volume) starts four processes on one new project at once, including the first capture; SIGKILLs a process holding a retained Workspace with uncommitted changes plus an in-flight Bash Workspace; checks that a live lease is not taken; and after expiry checks that a new session reclaims both, keeps the retained change on its Branch and leaves no mounts. See [its receipt](docs/recovery-receipt.jsonl).
 
-For browser acceptance run `scripts/parity-smoke.ts --serve` through the client. It reports a private dashboard URL and test finish URL, retains fixtures for at most 15 minutes, then removes the dedicated project volumes while preserving source/journals. Use the finish URL when inspection completes. See [docs/verification.md](docs/verification.md), [baseline receipts](docs/smoke-receipt.json) and the parity evidence linked there for actual identifiers, commands and acceptance boundaries.
+For browser acceptance run `scripts/parity-smoke.ts --serve` through the client. It reports a private dashboard URL and test finish URL, retains fixtures for at most 15 minutes, then removes the dedicated project volumes while preserving source/journals. Use the finish URL when inspection completes. See [docs/verification.md](docs/verification.md) and the parity evidence linked there for actual identifiers, commands and acceptance boundaries.

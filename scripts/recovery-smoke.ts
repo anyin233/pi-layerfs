@@ -6,9 +6,9 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
 import { loadConfig, required } from "../src/config.js";
+import { snapshot } from "../src/history.js";
 import { CONFIRM_MS, EXPIRY_MS, HEARTBEAT_MS } from "../src/lease.js";
 import { Operations } from "../src/operations.js";
-import { invoke } from "../src/ports.js";
 import { createRuntime, type Value } from "../src/runtime.js";
 
 const plugin = required(process.env.PI_LAYERFS_PLUGIN, "PI_LAYERFS_PLUGIN");
@@ -37,7 +37,7 @@ if (mode === "hold") {
     `printf 'kept after crash %s\\n' ${process.argv[3]} > recovered.txt`,
   );
   assert.equal(exec.exitCode, 0);
-  const bash = await runtime.sdk.workspace.mount(runtime.config.branch);
+  const bash = await runtime.mount(runtime.config.branch);
   await runtime.hold(bash, false);
   console.log(JSON.stringify({ held: [...runtime.owned.values()] }));
   setInterval(() => undefined, 1 << 30);
@@ -52,7 +52,7 @@ if (mode === "hold") {
   await writeFile(
     join(root, ".pi/layerfs.json"),
     JSON.stringify({
-      sdk: join(upstream, "sdk/js/src/index.js"),
+      sdk: join(upstream, "api/agent/sdk/src/index.js"),
       project: "pi-recovery",
       branch: "pi-work",
       initialize: true,
@@ -93,12 +93,8 @@ if (mode === "hold") {
   const observer = await open("observer", "worker");
   await observer.initialize();
   const mounted = async () => {
-    const snapshot = await invoke(
-      observer.options.operator,
-      "inspect",
-      "snapshot",
-    );
-    return (snapshot.sandboxes as Value[]).flatMap((s) =>
+    const state = await snapshot(observer);
+    return (state.sandboxes as Value[]).flatMap((s) =>
       (s.workspaces as Value[]).map((w) => `${w.sandbox}:${w.path}`),
     );
   };

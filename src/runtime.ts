@@ -30,6 +30,7 @@ import {
   workspaceKey,
 } from "./lease.js";
 import {
+  type Connect,
   invoke,
   loadClient,
   type RuntimeOptions,
@@ -46,9 +47,11 @@ export type Workspace = {
 };
 export interface SDK {
   options?: { traceStep?: string };
+  // Init's answer, on a client LayerFS.init made.
+  created?: Value;
   project: {
-    init(path: string): Promise<Value>;
     list_branches(size?: number, pos?: number): Promise<Page>;
+    list_sandboxes(size?: number, pos?: number): Promise<Page>;
   };
   branch: {
     fork(name: string, from?: string): Promise<Value>;
@@ -85,15 +88,22 @@ export interface SDK {
       pos?: number,
     ): Promise<Page>;
   };
+  sandbox: {
+    create(options?: { image?: string }): Promise<Value & { sandbox: string }>;
+    list_workspaces(
+      sandbox: string,
+      size?: number,
+      pos?: number,
+    ): Promise<Page & { version?: unknown }>;
+  };
   workspace: {
-    mount(branch: string, options?: { image?: string }): Promise<Workspace>;
+    mount(sandbox: string, branch: string): Promise<Workspace>;
     exec(
       ws: Workspace,
       command: string,
       message?: string,
       sinks?: { stdout?: Writable; stderr?: Writable },
     ): Promise<Value>;
-    status(ws: Workspace): Promise<Value>;
     commit(ws: Workspace, message?: string, force?: boolean): Promise<Value>;
     unmount(ws: Workspace, discard?: boolean): Promise<Value>;
   };
@@ -218,6 +228,8 @@ async function lockOwner(lock: string) {
   }
 }
 
+// Workspaces one Sandbox holds (LayerFS 1.1.0 agent guide).
+const SANDBOX_CAPACITY = 16;
 type Binding = {
   version: 1;
   root: string;
@@ -239,10 +251,12 @@ export class Runtime {
   recovery: Value | undefined;
   watch = new Watch();
   private reclaiming: Promise<Value> | undefined;
+  // Opened by initialize, or by open for a reader of an existing project.
+  sdk!: SDK;
   constructor(
     readonly root: string,
     readonly config: Config,
-    readonly sdk: SDK,
+    private connect: Connect,
     private validate = validateEnvironment,
     readonly options: RuntimeOptions = {},
   ) {
@@ -264,6 +278,33 @@ export class Runtime {
       })),
       processes: [...this.processes],
     }));
+  }
+  get backend() {
+    return required(this.options.backend, "LayerFS backend");
+  }
+  async open() {
+    this.sdk = await this.connect();
+  }
+  // LayerFS places no Workspace: use the lowest-numbered running
+  // Sandbox of the image with a free slot, else start one. A listed Sandbox
+  // may close itself when idle, or fill up, before the mount reaches it.
+  async mount(
+    branch: string,
+    image = required({ ...environment(), ...this.options.deployment }.IMAGE),
+  ) {
+    const { items } = await this.sdk.project.list_sandboxes(1000, 0);
+    const free = items.find(
+      (s) => s.image === image && Number(s.workspaces) < SANDBOX_CAPACITY,
+    );
+    if (free)
+      try {
+        return await this.sdk.workspace.mount(String(free.sandbox), branch);
+      } catch (e) {
+        const code = (e as { code?: unknown })?.code;
+        if (code !== "NoSuchSandbox" && code !== "Capacity") throw e;
+      }
+    const { sandbox } = await this.sdk.sandbox.create({ image });
+    return this.sdk.workspace.mount(sandbox, branch);
   }
   serial<T>(fn: () => Promise<T>): Promise<T> {
     const next = this.queue.then(fn);
@@ -326,7 +367,8 @@ export class Runtime {
   // first. A conflict cannot be resolved without its owner, so it is reported
   // and the overlay discarded; any other failure keeps the claim for a retry.
   reclaim(): Promise<Value> {
-    if (this.stopped || this.failure)
+    // Before the client is open, a later heartbeat or initialize reclaims.
+    if (this.stopped || this.failure || !this.sdk)
       return Promise.resolve({ reclaimed: [], errors: [] });
     this.reclaiming ??= this.reclaimOnce().finally(() => {
       this.reclaiming = undefined;
@@ -348,7 +390,7 @@ export class Runtime {
         const owner = { agent: record.agent, label: record.label };
         for (const id of record.processes) {
           try {
-            await invoke(this.options.operator, "process", "cancel", [id]);
+            await invoke(this.backend.daemon, "process", "cancel", [id]);
           } catch (e) {
             const code = (e as { code?: unknown })?.code;
             if (code !== "NoSuchProcess" && !workspaceGone(e))
@@ -403,8 +445,8 @@ export class Runtime {
   }
   // Only the first capture needs exclusion. A lock whose owner's lease expired
   // is taken over only when no capture began (no binding was written), since
-  // an interrupted project.init has an unknown outcome. The capture's intent
-  // is created exclusively, so even a racing takeover runs one project.init.
+  // an interrupted LayerFS.init has an unknown outcome. The capture's intent
+  // is created exclusively, so even a racing takeover runs one LayerFS.init.
   private async lockBinding(lock: string, file: string) {
     const owner = join(lock, "owner");
     const watch = new Watch(this.watch.confirmMs);
@@ -485,6 +527,7 @@ export class Runtime {
         "Incomplete initialization intent; inspect LayerFS before explicit recovery (no automatic replay)",
       );
     this.initial = binding.initial;
+    if (!this.sdk) await this.open();
     await this.verifyBranches(binding.initial);
   }
   private async capture(file: string, home: string, store: string) {
@@ -522,9 +565,10 @@ export class Runtime {
     } finally {
       await rm(intent);
     }
-    const init = await this.sdk.project.init(this.root);
+    this.sdk = await this.connect(this.root);
+    const init = required(this.sdk.created);
     if (init.kind !== "Initialized" || typeof init.layer !== "string")
-      throw new Error("Unexpected project.init result");
+      throw new Error("Unexpected LayerFS.init result");
     binding.initial = init.layer;
     await save();
     return binding;
@@ -541,8 +585,12 @@ export class Runtime {
     }
     const main = branches.find((b) => b.name === "main");
     const layers = new Set([initial]);
-    if (this.options.history) {
-      const history = await this.options.history();
+    if (this.options.backend) {
+      const history = await invoke(
+        this.options.backend.store,
+        "project",
+        "get_history",
+      );
       for (const layer of history.layers as Value[])
         layers.add(String(layer.id));
       if (!(history.layers as Value[]).some((l) => l.id === initial))
@@ -664,7 +712,7 @@ export class Runtime {
       let result: Value | undefined;
       let commit: Value | undefined;
       try {
-        ws = await this.sdk.workspace.mount(this.config.branch);
+        ws = await this.mount(this.config.branch);
         key = workspaceKey(ws);
         await this.hold(ws, false);
         // Foreground SDK exec has no cancellation port. Wait for timeout+kill and
@@ -814,7 +862,7 @@ export class Runtime {
       const errors: Value[] = [];
       for (const id of this.processes) {
         try {
-          await invoke(this.options.operator, "process", "cancel", [id]);
+          await invoke(this.backend.daemon, "process", "cancel", [id]);
           this.processes.delete(id);
         } catch (e) {
           if ((e as { code?: unknown })?.code === "NoSuchProcess")
@@ -852,7 +900,7 @@ export class Runtime {
       else errors.push({ phase: "cleanup", ...errorData(e) });
     }
     try {
-      await this.sdk.close();
+      if (this.sdk) await this.sdk.close();
     } catch (e) {
       errors.push({ phase: "close", ...errorData(e) });
     }
@@ -867,11 +915,11 @@ export async function createRuntime(
   const canonical = await realpath(root);
   options.agent ??= randomUUID();
   options.deployment = { ...environment(), ...options.deployment };
-  const sdk = await loadClient(config.sdk, config.project, options);
+  const connect = await loadClient(config.sdk, config.project, options);
   return new Runtime(
     canonical,
     config,
-    sdk,
+    connect,
     (root) =>
       withDeployment(options.deployment ?? {}, () => validateEnvironment(root)),
     options,

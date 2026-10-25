@@ -4,16 +4,61 @@ import { required } from "./config.js";
 import { invoke } from "./ports.js";
 import type { Runtime, Value } from "./runtime.js";
 
+/** The Store's history with the Workspaces of every running Sandbox, as
+ * the dashboard shows them. It starts no Sandbox; one that
+ * stopped after it was listed is in `gone` with its refusal's detail. */
+export async function snapshot(
+  runtime: Runtime,
+  since?: unknown,
+): Promise<Value> {
+  const { store, daemon } = runtime.backend;
+  const history = await invoke(store, "project", "get_history");
+  const listed = (await runtime.sdk.project.list_sandboxes(1000, 0)).items;
+  const reads = await Promise.all(
+    listed.map(async ({ sandbox }) => {
+      try {
+        const page = await runtime.sdk.sandbox.list_workspaces(
+          String(sandbox),
+          1000,
+          0,
+        );
+        for (const workspace of page.items)
+          workspace.overlay = await invoke(daemon, "workspace", "get_storage", [
+            workspace,
+          ]);
+        return { page };
+      } catch (e) {
+        if ((e as { code?: unknown })?.code !== "NoSuchSandbox") throw e;
+        return { gone: (e as { detail?: unknown }).detail ?? null };
+      }
+    }),
+  );
+  const version = [
+    history.version,
+    ...reads.map(
+      (read, i) => read.page?.version ?? `gone-${listed[i].sandbox}`,
+    ),
+  ].join(".");
+  if (since === version) return { kind: "unchanged", version };
+  return {
+    ...history,
+    kind: "ok",
+    version,
+    sandboxes: listed.flatMap((sandbox, i) => {
+      const page = reads[i].page;
+      return page ? [{ ...sandbox, workspaces: page.items }] : [];
+    }),
+    gone: listed.flatMap((sandbox, i) =>
+      reads[i].page ? [] : [{ ...sandbox, detail: reads[i].gone }],
+    ),
+  };
+}
 /** Same-tree Layer -> Commit mapping used by upstream DSH Files reads. */
 export async function compareSaved(runtime: Runtime, args: Value) {
-  const snapshot = await invoke(
-    runtime.options.operator,
-    "inspect",
-    "snapshot",
-  );
-  const commits = snapshot.commits as Value[],
-    layers = snapshot.layers as Value[],
-    branches = snapshot.branches as Value[];
+  const history = await invoke(runtime.backend.store, "project", "get_history");
+  const commits = history.commits as Value[],
+    layers = history.layers as Value[],
+    branches = history.branches as Value[];
   const comparable = (input: unknown) => {
     const original = String(required(input));
     const branch = branches.find((b) => b.name === original);

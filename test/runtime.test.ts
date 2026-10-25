@@ -21,6 +21,7 @@ import {
   verifyStoreMount,
 } from "../src/config.js";
 import { leaseHolders, Watch } from "../src/lease.js";
+import type { Connect } from "../src/ports.js";
 import {
   branchPath,
   OperationError,
@@ -51,6 +52,7 @@ async function fixture() {
   process.env.LAYERFS_HOME = home;
   process.env.LAYERFS_STORE_PATH = join(dir, "store/global/store.sqlite");
   process.env.LAYERFS_VOLUME = "test-volume";
+  process.env.LAYERFS_IMAGE = `sha256:${"b".repeat(64)}`;
   const events: string[] = [];
   const branches: Value[] = [{ name: "main", base: "L0-id", head: null }];
   const files = new Map<string, string>();
@@ -61,14 +63,15 @@ async function fixture() {
   });
   let unmountError: Error | undefined;
   let commitError: Error | undefined;
+  let init = async (): Promise<Value> => {
+    events.push("init");
+    await mkdir(join(home, "test"));
+    return { kind: "Initialized", layer: "L0-id" };
+  };
   const sdk: SDK = {
     project: {
-      init: async () => {
-        events.push("init");
-        await mkdir(join(home, "test"));
-        return { kind: "Initialized", layer: "L0-id" };
-      },
       list_branches: async () => ({ items: branches, hasMore: false }),
+      list_sandboxes: async () => ({ items: [], hasMore: false }),
     },
     branch: {
       fork: async (name, from) => {
@@ -101,6 +104,10 @@ async function fixture() {
       glob: async () => ({ items: [], hasMore: false }),
       grep: async () => ({ items: [], hasMore: false }),
     },
+    sandbox: {
+      create: async () => ({ sandbox: "1" }),
+      list_workspaces: async () => ({ items: [], hasMore: false }),
+    },
     workspace: {
       mount: async () => {
         events.push("mount");
@@ -123,7 +130,6 @@ async function fixture() {
           stderr: `${value.stderr ?? ""}\n${marker}:${value.exitCode}\n`,
         };
       },
-      status: async () => ({}),
       commit: async () => {
         events.push("commit");
         if (commitError) throw commitError;
@@ -139,11 +145,15 @@ async function fixture() {
       events.push("close");
     },
   };
+  const connect: Connect = async (folder) => {
+    if (folder !== undefined) sdk.created = await init();
+    return sdk;
+  };
   const create = (c = config, options: RuntimeOptions = {}) =>
     new Runtime(
       root,
       c,
-      sdk,
+      connect,
       async () => ({
         environment: {},
         filesystem: "ext4",
@@ -161,6 +171,9 @@ async function fixture() {
     },
     setUnmount: (e?: Error) => {
       unmountError = e;
+    },
+    setInit: (fn: typeof init) => {
+      init = fn;
     },
     setCommit: (e?: Error) => {
       commitError = e;
@@ -196,7 +209,10 @@ test("configuration validates names, defaults, timeout, unknown fields and malfo
     assert.equal((await loadConfig(f.root, file)).branch, "pi-work");
     await writeFile(file, JSON.stringify({ project: "demo" }));
     const bundled = await loadConfig(f.root, file);
-    assert.match(bundled.sdk, /vendor\/layerfs\/sdk\/js\/src\/index\.js$/);
+    assert.match(
+      bundled.sdk,
+      /vendor\/layerfs\/node_modules\/@layerfs\/agent\/src\/index\.js$/,
+    );
     assert.match(await readFile(bundled.sdk, "utf8"), /export class LayerFS/);
     for (const invalid of [
       { sdk: "" },
@@ -605,10 +621,10 @@ test("initialization failure is not silently retried", async () => {
   try {
     const r = f.create();
     let calls = 0;
-    f.sdk.project.init = async () => {
+    f.setInit(async () => {
       calls++;
       throw new Error("unknown acquisition");
-    };
+    });
     await assert.rejects(r.initialize(), /unknown acquisition/);
     await assert.rejects(r.initialize(), /unknown acquisition/);
     assert.equal(calls, 1);
@@ -704,7 +720,7 @@ test("expired leases are reclaimed only after confirmation: retained work commit
   const f = await fixture();
   try {
     const cancelled: string[] = [];
-    const operator = {
+    const daemon = {
       process: {
         cancel: async (id: unknown) => {
           cancelled.push(String(id));
@@ -717,9 +733,15 @@ test("expired leases are reclaimed only after confirmation: retained work commit
       },
     };
     const r = f.create(config, {
-      operator,
+      backend: {
+        daemon,
+        store: {
+          project: {
+            get_history: async () => ({ layers: [{ id: "L0-id" }] }),
+          },
+        },
+      },
       agent: "lead",
-      history: async () => ({ layers: [{ id: "L0-id" }] }),
     });
     r.watch = new Watch(0);
     const live = "22222222-2222-4222-8222-222222222222";

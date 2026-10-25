@@ -11,11 +11,13 @@ chmod 700 -- "$state_dir"
 node -e 'if (Number(process.versions.node.split(".")[0]) < 22) process.exit(1)'
 docker version
 [[ -c /dev/fuse ]]
-[[ $(git -C "$upstream" rev-parse HEAD) == 1aa56ece78e2ecd71b46cf07076100345df47239 ]] || { echo 'LayerFS revision differs from qualified revision; review compatibility first' >&2; exit 1; }
+[[ $(git -C "$upstream" rev-parse HEAD) == ad78914e36b258b360daf13aec164b5655814689 ]] || { echo 'LayerFS revision differs from qualified revision; review compatibility first' >&2; exit 1; }
 (
   cd -- "$upstream"
   cargo +1.85.1 fetch --manifest-path core/Cargo.toml --locked
-  npm --prefix sdk/js run build:native
+  # Links api/'s workspaces, so @layerfs/backend resolves @layerfs/agent; it downloads nothing.
+  npm --prefix api install --ignore-scripts --no-audit --no-fund
+  npm --prefix api run build:native
   cargo +1.85.1 build --manifest-path core/Cargo.toml --offline --locked --release -p layerfs-daemon --bins
 )
 # The daemon must target the runtime's glibc, not the development host's.
@@ -27,8 +29,9 @@ docker run --rm --user "$(id -u):$(id -g)" \
   -e CARGO_TARGET_DIR=/work/core/target/pi-bookworm -w /work \
   rust:1.85.1-bookworm cargo build --manifest-path core/Cargo.toml --offline --locked --release -p layerfs-node --lib -p layerfs-daemon --bins
 cp "$upstream/core/target/pi-bookworm/release/liblayerfs_node.so" "$upstream/core/target/pi-bookworm/layerfs.node"
-# Official runtime build; the actual immutable ID, never the tag, is given to SDK.
-docker build -t pi-layerfs-runtime:local "$upstream/dsh/tools/history/runtime"
+# LayerFS 1.1.0 ships no runtime image; the plugin image's base stage is the
+# former upstream one. The actual immutable ID, never the tag, is given to SDK.
+docker build --target runtime -t pi-layerfs-runtime:local -f "$plugin_root/container/Dockerfile" "$plugin_root"
 image_id=$(docker image inspect --format '{{.Id}}' pi-layerfs-runtime:local)
 # State-directory identity makes resources specific to this installation.
 instance=$(printf '%s' "$state_dir" | sha256sum | cut -c1-12)

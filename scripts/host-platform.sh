@@ -46,7 +46,7 @@ layerfs_docker_connect() {
 layerfs_runtime_probe() {
   local image=$1
   # --device checks the VM device on macOS; no macFUSE installation is needed.
-  docker run --rm --platform linux/amd64 --device /dev/fuse --entrypoint sh "$image" -c 'test -c /dev/fuse && node -e "require(\"/opt/pi-layerfs/vendor/layerfs/sdk/js/native/layerfs.node\")"' || {
+  docker run --rm --platform linux/amd64 --device /dev/fuse --entrypoint sh "$image" -c 'test -c /dev/fuse && node -e "require(\"/opt/pi-layerfs/vendor/layerfs/node_modules/binding/layerfs.node\")"' || {
     echo 'The Linux runtime needs a VM with /dev/fuse and amd64 image support (emulation on Apple Silicon).' >&2
     return 1
   }

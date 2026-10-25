@@ -23,9 +23,9 @@ for (const name of [
   "scripts/release-smoke.mjs",
   "scripts/host-platform.sh",
   "scripts/project-smoke.mjs",
-  "vendor/layerfs/sdk/js/src/index.js",
-  "vendor/layerfs/sdk/js/operator/index.js",
-  "vendor/layerfs/sdk/js/native/layerfs.node",
+  "vendor/layerfs/node_modules/@layerfs/agent/src/index.js",
+  "vendor/layerfs/node_modules/@layerfs/backend/src/index.js",
+  "vendor/layerfs/node_modules/binding/layerfs.node",
   "vendor/layerfs/bin/layerfs-daemon",
   "vendor/layerfs/ARTIFACTS.json",
   "vendor/layerfs/licenses/INDEX.json",
@@ -40,11 +40,12 @@ for (const name of [
 assert.ok(
   names.every((name) => name.startsWith("package/") && !name.includes("/../")),
 );
+// The vendored LayerFS packages are the only node_modules shipped.
 assert.ok(
   names.every(
     (name) =>
       !/(?:^|\/)(?:node_modules|\.git|\.layerfs-local|\.env|auth\.json|credentials\.json)(?:\/|$)/.test(
-        name,
+        name.replace(/^package\/vendor\/layerfs\/node_modules\//, ""),
       ),
   ),
   "Package contains private state or duplicated host peers",
@@ -58,13 +59,21 @@ try {
   assert.equal(extract.status, 0, extract.stderr);
   const root = join(directory, "package");
   const native = await readFile(
-    join(root, "vendor/layerfs/sdk/js/native/layerfs.node"),
+    join(root, "vendor/layerfs/node_modules/binding/layerfs.node"),
   );
   assert.equal(native.subarray(0, 4).toString("hex"), "7f454c46");
   const sdk = await import(
-    pathToFileURL(join(root, "vendor/layerfs/sdk/js/src/index.js")).href
+    pathToFileURL(
+      join(root, "vendor/layerfs/node_modules/@layerfs/agent/src/index.js"),
+    ).href
   );
   assert.equal(typeof sdk.LayerFS, "function");
+  const backend = await import(
+    pathToFileURL(
+      join(root, "vendor/layerfs/node_modules/@layerfs/backend/src/index.js"),
+    ).href
+  );
+  assert.equal(typeof backend.LayerFSBackend, "function");
   for (const name of Object.keys(process.env))
     if (name.startsWith("LAYERFS_") || name.startsWith("DSH_LAYERFS_"))
       delete process.env[name];

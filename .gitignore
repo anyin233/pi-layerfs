@@ -7,6 +7,7 @@ dist/
 release-out/
 *.tgz
 vendor/layerfs/bin/
-vendor/layerfs/sdk/js/native/
+!vendor/layerfs/node_modules/
+vendor/layerfs/node_modules/binding/
 vendor/layerfs/licenses/
 vendor/layerfs/ARTIFACTS.json

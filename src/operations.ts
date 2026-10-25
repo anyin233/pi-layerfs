@@ -11,7 +11,7 @@ import {
 import { join } from "node:path";
 import { runWorkspace } from "./commands.js";
 import { required } from "./config.js";
-import { compareSaved, traceFiles, tracePage } from "./history.js";
+import { compareSaved, snapshot, traceFiles, tracePage } from "./history.js";
 import { workspaceGone } from "./lease.js";
 import { invoke } from "./ports.js";
 import {
@@ -310,10 +310,7 @@ export class Operations {
         const branch = name(a.branch ?? r.config.branch);
         if (r.options.role === "worker" && branch !== r.config.branch)
           throw new Error("Workers mount only their active Branch");
-        const ws = await r.sdk.workspace.mount(
-          branch,
-          image ? { image } : undefined,
-        );
+        const ws = await r.mount(branch, image || undefined);
         ws.branch = branch;
         const id = await r.hold(ws, true);
         await this.record({ method: "workspace.mount", workspace: ws });
@@ -359,7 +356,7 @@ export class Operations {
           return result;
         }
         case "status":
-          return r.sdk.workspace.status(ws);
+          return invoke(r.backend.daemon, "workspace", "status", [ws]);
         case "commit":
           return r.sdk.workspace.commit(
             ws,
@@ -380,11 +377,12 @@ export class Operations {
         }
         case "overlay":
         case "changes":
-          return invoke(r.options.operator, "workspace", action, [
-            ws,
-            a.limit ?? 100,
-            a.page ?? 0,
-          ]);
+          return invoke(
+            r.backend.daemon,
+            "workspace",
+            action === "overlay" ? "get_storage" : "list_changes",
+            [ws, a.limit ?? 100, a.page ?? 0],
+          );
         default:
           throw new Error(`Unknown Workspace action: ${action}`);
       }
@@ -393,13 +391,12 @@ export class Operations {
   process(action: string, a: Value) {
     return this.runtime.serial(async () => {
       const r = this.runtime;
-      if (action === "list")
-        return invoke(r.options.operator, "process", "list");
+      if (action === "list") return invoke(r.backend.daemon, "process", "list");
       if (action === "start") {
         const ws = r.owned.get(String(a.id));
         if (!ws || !r.persistent.has(String(a.id)))
           throw new Error("Start requires an owned retained Workspace");
-        const value = await invoke(r.options.operator, "process", "start", [
+        const value = await invoke(r.backend.daemon, "process", "start", [
           ws,
           String(required(a.command)),
         ]);
@@ -416,9 +413,7 @@ export class Operations {
         const id = String(a.process);
         if (!r.processes.has(id))
           throw new Error("Process is not owned by this agent");
-        const value = await invoke(r.options.operator, "process", "cancel", [
-          id,
-        ]);
+        const value = await invoke(r.backend.daemon, "process", "cancel", [id]);
         r.processes.delete(id);
         await r.lease.write();
         return value;
@@ -427,7 +422,7 @@ export class Operations {
     });
   }
   inspect(action: string, a: Value = {}): Promise<Value> {
-    const op = this.runtime.options.operator;
+    const store = () => this.runtime.backend.store;
     switch (action) {
       case "changes":
         return compareSaved(this.runtime, a);
@@ -441,19 +436,19 @@ export class Operations {
           Number(a.limit ?? 500),
         );
       case "snapshot":
-        return invoke(op, "inspect", "snapshot", [a.since]);
+        return snapshot(this.runtime, a.since);
       case "storage":
-        return invoke(op, "store", "stats");
+        return invoke(store(), "project", "get_storage");
       case "progress":
-        return invoke(op, "project", "progress");
+        return required(this.runtime.options.progress)();
       case "sandboxes":
-        return invoke(op, "sandbox", "list");
+        return this.runtime.sdk.project.list_sandboxes(1000, 0);
       case "file_stats":
       case "file_history":
         return invoke(
-          op,
-          "files",
-          action === "file_stats" ? "stats" : "history",
+          store(),
+          "fs",
+          action === "file_stats" ? "get_storage" : "list_revisions",
           [
             a.ref ?? this.runtime.config.branch,
             branchPath(this.runtime.root, String(a.path ?? ".")),
@@ -462,7 +457,7 @@ export class Operations {
           ],
         );
       case "overwritten":
-        return invoke(op, "store", "overwritten", [
+        return invoke(store(), "project", "list_overwritten", [
           required(a.layer),
           a.limit ?? 100,
           a.page ?? 0,

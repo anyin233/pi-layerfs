@@ -2,7 +2,7 @@
 set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 source_dir=${1:-"$root/.build/layerfs"}
-revision=1aa56ece78e2ecd71b46cf07076100345df47239
+revision=ad78914e36b258b360daf13aec164b5655814689
 if [[ ! -d "$source_dir/.git" ]]; then
   [[ ! -e "$source_dir" ]] || { echo 'Upstream directory exists without Git metadata.' >&2; exit 1; }
   mkdir -p -- "$source_dir"

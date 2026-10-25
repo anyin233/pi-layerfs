@@ -175,7 +175,11 @@ export class Control {
         STORE_PATH: record.store,
       },
     };
-    const sdk = await loadClient(this.runtime.config.sdk, record.name, options);
+    const connect = await loadClient(
+      this.runtime.config.sdk,
+      record.name,
+      options,
+    );
     const r = new Runtime(
       record.root,
       {
@@ -184,10 +188,11 @@ export class Control {
         branch: "main",
         initialize: false,
       },
-      sdk,
+      connect,
       undefined,
       options,
     );
+    await r.open();
     const ops = new Operations(r);
     await ops.ready();
     // Viewers hold no Workspace, but their lease keeps removal from

@@ -11,6 +11,7 @@ import {
   wrapRegisteredTools,
 } from "@earendil-works/pi-coding-agent";
 import { loadConfig, required } from "../src/config.js";
+import { snapshot } from "../src/history.js";
 import { createRuntime, type Value, type Workspace } from "../src/runtime.js";
 
 const plugin = process.env.PI_LAYERFS_PLUGIN ?? process.cwd();
@@ -25,7 +26,7 @@ await mkdir(join(root, ".pi"), { recursive: true });
 await mkdir(agentDir, { recursive: true });
 const configFile = join(root, ".pi/layerfs.json");
 const config = {
-  sdk: join(upstream, "sdk/js/src/index.js"),
+  sdk: join(upstream, "api/agent/sdk/src/index.js"),
   project: "pi-smoke",
   branch: "pi-work",
   initialize: true,
@@ -48,7 +49,7 @@ if (!reopen) {
   // Exercise the real native binding + daemon before invoking Pi tools.
   let ws: Workspace | undefined;
   try {
-    ws = await runtime.sdk.workspace.mount(config.branch);
+    ws = await runtime.mount(config.branch);
     receipt("sdk.mount", ws);
     const command = await runtime.sdk.workspace.exec(ws, "printf sdk-ok");
     receipt("sdk.exec", command);
@@ -249,16 +250,16 @@ try {
       (await inspector.sdk.fs.read("main", "/seed.txt")).text,
       "initial\n",
     );
-    const operatorModule = await import(
-      join(upstream, "sdk/js/operator/index.js")
+    const state = await snapshot(inspector);
+    receipt("snapshot", state);
+    assert.equal(
+      (state.layers as Value[]).length,
+      1,
+      "only the genesis Layer exists",
     );
-    const operator = new operatorModule.LayerFSOperator(inspector.sdk);
-    const snapshot = await operator.inspect.snapshot();
-    receipt("operator.snapshot", snapshot);
-    assert.equal(snapshot.layers.length, 1, "only the genesis Layer exists");
     assert.ok(
-      snapshot.sandboxes.every(
-        (s: { workspaces: unknown[] }) => s.workspaces.length === 0,
+      (state.sandboxes as Value[]).every(
+        (s) => (s.workspaces as Value[]).length === 0,
       ),
       "daemon confirms no mounted Workspace",
     );

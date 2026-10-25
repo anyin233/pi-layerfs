@@ -41,7 +41,7 @@ const hardlinkOnly = process.argv.includes("--hardlink-only");
 const root = `/layerfs-store/benchmark/${hardlinkOnly ? "full-hardlink-v2" : full ? "full" : "source"}`;
 await mkdir(root, { recursive: true });
 await mkdir("/layerfs-store/home", { recursive: true, mode: 0o700 });
-const sdk = `${process.env.PI_LAYERFS_UPSTREAM}/sdk/js/src/index.js`;
+const sdk = `${process.env.PI_LAYERFS_UPSTREAM}/api/agent/sdk/src/index.js`;
 const receipts: unknown[] = [];
 const log = (step: string, value: unknown) => {
   const entry = { step, time: new Date().toISOString(), value };

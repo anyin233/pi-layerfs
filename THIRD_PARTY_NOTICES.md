@@ -4,12 +4,13 @@ pi-layerfs is distributed under the MIT license in [LICENSE](LICENSE).
 
 ## LayerFS
 
-The bundled JavaScript SDK, native Node binding and daemon come from
+The bundled JavaScript packages, native Node binding and daemon come from
 [Ephemeral-AI-Lab/layerfs](https://github.com/Ephemeral-AI-Lab/layerfs), revision
-`1aa56ece78e2ecd71b46cf07076100345df47239` (SDK 1.0.0).
+`ad78914e36b258b360daf13aec164b5655814689` (LayerFS 1.1.0).
 Copyright (c) 2026 Ephemeral-AI. The complete MIT license is preserved at
-`vendor/layerfs/LICENSE`. SDK `src/` and `operator/` JavaScript are unmodified;
-the vendored package metadata only declares their runtime exports.
+`vendor/layerfs/LICENSE`. The `package.json` and `src/` of `@layerfs/agent`
+and `@layerfs/backend` under `vendor/layerfs/node_modules/@layerfs/` are
+unmodified.
 
 Release packages contain `vendor/layerfs/ARTIFACTS.json` with binary SHA-256
 values and `vendor/layerfs/licenses/INDEX.json` with locked Rust dependency

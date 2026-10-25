@@ -23,7 +23,7 @@ try {
 const { port, token } = bridge;
 const source = "/layerfs-store/benchmark/source/source-only";
 const runtime = await createRuntime(source, {
-  sdk: `${process.env.PI_LAYERFS_UPSTREAM}/sdk/js/src/index.js`,
+  sdk: `${process.env.PI_LAYERFS_UPSTREAM}/api/agent/sdk/src/index.js`,
   project: "bench-source-hsok3zhe",
   branch: "pi-work",
   initialize: false,

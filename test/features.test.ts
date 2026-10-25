@@ -16,13 +16,21 @@ import { join } from "node:path";
 import test from "node:test";
 import { Script } from "node:vm";
 import type { Config } from "../src/config.js";
+import { required } from "../src/config.js";
 import { Control } from "../src/control.js";
 import { Dashboard } from "../src/dashboard.js";
 import { dashboardPage } from "../src/dashboard-page.js";
 import { compareSaved, traceFiles, tracePage } from "../src/history.js";
 import { scanSource } from "../src/import-progress.js";
 import { Operations } from "../src/operations.js";
-import { type Surface, withDeployment } from "../src/ports.js";
+import {
+  type Backend,
+  type Connect,
+  invoke,
+  loadClient,
+  type RuntimeOptions,
+  withDeployment,
+} from "../src/ports.js";
 import { Runtime, type SDK, type Value } from "../src/runtime.js";
 
 async function fixture() {
@@ -50,13 +58,11 @@ async function fixture() {
       calls.push({ method, args });
       return value;
     };
+  const image = `sha256:${"a".repeat(64)}`;
   const sdk: SDK = {
     project: {
-      init: async () => {
-        await mkdir(join(home, "test"));
-        return { kind: "Initialized", layer: "L0" };
-      },
       list_branches: async () => ({ items: branches, hasMore: false }),
+      list_sandboxes: async () => ({ items: [], hasMore: false }),
     },
     branch: {
       fork: async (name, from) => {
@@ -75,10 +81,17 @@ async function fixture() {
       glob: async () => ({ items: [], hasMore: false }),
       grep: async () => ({ items: [], hasMore: false }),
     },
+    sandbox: {
+      create: async () => {
+        calls.push({ method: "sandbox.create", args: [] });
+        return { sandbox: "1", image };
+      },
+      list_workspaces: async () => ({ items: [], hasMore: false, version: 1 }),
+    },
     workspace: {
-      mount: async () => {
-        calls.push({ method: "mount", args: [] });
-        return { sandbox: "1", path: "/workspaces/1" };
+      mount: async (sandbox, branch) => {
+        calls.push({ method: "mount", args: [sandbox, branch] });
+        return { sandbox, path: "/workspaces/1" };
       },
       exec: async (_ws, command, _message, sinks) => {
         const marker = command.match(/__PI_LAYERFS_EXIT_[a-f0-9-]+__/)?.[0];
@@ -93,7 +106,6 @@ async function fixture() {
           stderrBytes: Buffer.byteLength(`err\n${marker}:124\n`),
         };
       },
-      status: record("status"),
       commit: async () => {
         if (commitError) throw commitError;
         return { kind: "Committed", head: "C1" };
@@ -119,21 +131,33 @@ async function fixture() {
     rm: record("rm"),
     diff_files: record("diff_files"),
   });
-  const operator: Surface = {
-    inspect: {
-      snapshot: async () => ({ layers, branches, sandboxes: [], commits: [] }),
-    },
+  const backend: Backend = {
     store: {
-      stats: record("storage", { logical: 100 }),
-      overwritten: record("overwritten"),
+      project: {
+        get_history: async () => ({ layers, branches, commits: [] }),
+        get_storage: record("storage", { logical: 100 }),
+        list_overwritten: record("overwritten"),
+      },
     },
-    process: {
-      start: record("start", { process: "proc_1_owned" }),
-      list: record("process.list"),
-      cancel: record("cancel"),
+    daemon: {
+      process: {
+        start: record("start", { process: "proc_1_owned" }),
+        list: record("process.list"),
+        cancel: record("cancel"),
+      },
+      workspace: {
+        status: record("status"),
+        get_storage: record("overlay"),
+        list_changes: record("changes"),
+      },
     },
-    workspace: { overlay: record("overlay"), changes: record("changes") },
-    project: { progress: record("progress") },
+  };
+  const connect: Connect = async (folder) => {
+    if (folder !== undefined) {
+      await mkdir(join(home, "test"));
+      sdk.created = { kind: "Initialized", layer: "L0" };
+    }
+    return sdk;
   };
   const options = {
     agent: randomUUID(),
@@ -142,14 +166,15 @@ async function fixture() {
       HOME: home,
       STORE_PATH: join(dir, "store/global/store.sqlite"),
       VOLUME: "unit-volume",
+      IMAGE: image,
     },
-    operator,
-    history: async () => ({ layers }),
+    backend,
+    progress: record("progress"),
   };
   const runtime = new Runtime(
     root,
     config,
-    sdk,
+    connect,
     async () => ({ environment: {}, filesystem: "ext4" }),
     options,
   );
@@ -162,7 +187,8 @@ async function fixture() {
     home,
     config,
     sdk,
-    operator,
+    connect,
+    backend,
     runtime,
     ops,
     calls,
@@ -211,7 +237,7 @@ test("published main and later-layer Branches reopen with the original genesis",
     const second = new Runtime(
       f.root,
       { ...f.config },
-      f.sdk,
+      f.connect,
       async () => ({ environment: {}, filesystem: "ext4" }),
       f.runtime.options,
     );
@@ -221,7 +247,7 @@ test("published main and later-layer Branches reopen with the original genesis",
     const third = new Runtime(
       f.root,
       { ...f.config },
-      f.sdk,
+      f.connect,
       async () => ({ environment: {}, filesystem: "ext4" }),
       f.runtime.options,
     );
@@ -432,7 +458,7 @@ test("browser page JavaScript parses and data rendering uses text nodes", () => 
 test("saved Layers compare only through verified equivalent Commit trees", async () => {
   const f = await fixture();
   try {
-    f.operator.inspect.snapshot = async () => ({
+    f.backend.store.project.get_history = async () => ({
       commits: [{ id: "C1", root: "R1" }],
       layers: [
         { id: "L0", root: "empty", parent: null },
@@ -566,7 +592,7 @@ test("reusing a project name with a new volume does not mix old actor journals",
     const replacement = new Runtime(
       f.root,
       f.runtime.config,
-      f.runtime.sdk,
+      f.connect,
       async () => ({ environment: {}, filesystem: "ext4" }),
       {
         ...f.runtime.options,
@@ -668,4 +694,165 @@ test("history rendering retains the creator and branch after a fast-forward merg
     ),
   );
   assert.ok(!elements.some((n) => /C1.*Lead/.test(String(n.textContent))));
+});
+
+test("mounts use the lowest running Sandbox of the image with a free slot, else a new one", async () => {
+  const f = await fixture();
+  try {
+    const image = String(f.runtime.options.deployment?.IMAGE);
+    f.sdk.project.list_sandboxes = async () => ({
+      items: [
+        { sandbox: "1", image: `sha256:${"c".repeat(64)}`, workspaces: 0 },
+        { sandbox: "2", image, workspaces: 16 },
+        { sandbox: "3", image, workspaces: 4 },
+        { sandbox: "4", image, workspaces: 0 },
+      ],
+      hasMore: false,
+    });
+    assert.equal((await f.runtime.mount("pi-work")).sandbox, "3");
+    assert.ok(!f.calls.some((c) => c.method === "sandbox.create"));
+    const mount = f.sdk.workspace.mount;
+    // Sandbox 3 closed itself when idle after it was listed.
+    f.sdk.workspace.mount = async (sandbox, branch) => {
+      if (sandbox === "3")
+        throw Object.assign(new Error("closed"), { code: "NoSuchSandbox" });
+      return mount(sandbox, branch);
+    };
+    assert.equal((await f.runtime.mount("pi-work")).sandbox, "1");
+    assert.deepEqual(
+      f.calls.slice(-2).map((c) => c.method),
+      ["sandbox.create", "mount"],
+    );
+    f.sdk.workspace.mount = async () => {
+      throw Object.assign(new Error("transport"), { code: "Unknown" });
+    };
+    await assert.rejects(f.runtime.mount("pi-work"), /transport/);
+  } finally {
+    await f.close();
+  }
+});
+test("snapshot joins Store history with live Workspaces and reports stopped Sandboxes", async () => {
+  const f = await fixture();
+  try {
+    f.backend.store.project.get_history = async () => ({
+      kind: "ok",
+      version: "h1",
+      layers: f.layers,
+    });
+    f.sdk.project.list_sandboxes = async () => ({
+      items: [
+        { sandbox: "1", name: "a", workspaces: 1 },
+        { sandbox: "2", name: "b", workspaces: 0 },
+      ],
+      hasMore: false,
+    });
+    f.sdk.sandbox.list_workspaces = async (sandbox) => {
+      if (sandbox === "2")
+        throw Object.assign(new Error("gone"), {
+          code: "NoSuchSandbox",
+          detail: { containerGone: true },
+        });
+      return {
+        items: [{ sandbox, path: "/workspaces/1" }],
+        hasMore: false,
+        version: "w7",
+      };
+    };
+    const state = await f.ops.inspect("snapshot");
+    assert.equal(state.version, "h1.w7.gone-2");
+    assert.deepEqual(state.layers, f.layers);
+    assert.deepEqual(state.sandboxes, [
+      {
+        sandbox: "1",
+        name: "a",
+        workspaces: [{ sandbox: "1", path: "/workspaces/1", overlay: {} }],
+      },
+    ]);
+    assert.deepEqual(state.gone, [
+      {
+        sandbox: "2",
+        name: "b",
+        workspaces: 0,
+        detail: { containerGone: true },
+      },
+    ]);
+    assert.deepEqual(
+      await f.ops.inspect("snapshot", { since: "h1.w7.gone-2" }),
+      {
+        kind: "unchanged",
+        version: "h1.w7.gone-2",
+      },
+    );
+  } finally {
+    await f.close();
+  }
+});
+test("clients get their deployment and trace file when made, and each call its step", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "pi-lfs-ports-"));
+  try {
+    const scope = join(dir, "node_modules/@layerfs");
+    const files: Record<string, string> = {
+      "agent/package.json": JSON.stringify({
+        name: "@layerfs/agent",
+        type: "module",
+        exports: { ".": "./src/index.js" },
+      }),
+      "agent/src/index.js": `const env = (name) => process.env["LAYERFS_" + name];
+const made = (project, folder) => {
+  const seen = { volume: env("VOLUME"), trace: env("TRACE") };
+  const client = { project: { list_branches: async () => ({ ...seen, step: env("TRACE_STEP") }) }, branch: {}, fs: {}, sandbox: {}, workspace: {}, close: async () => {} };
+  if (folder) client.created = { kind: "Initialized", folder };
+  return client;
+};
+export class LayerFS {
+  static async open(project) { return made(project); }
+  static async init(project, folder) { return made(project, folder); }
+}`,
+      "agent/src/internal.js": `export const invokeBackend = async (op, args) => ({ op, args, native: process.env.LAYERFS_NATIVE });`,
+      "backend/package.json": JSON.stringify({
+        name: "@layerfs/backend",
+        type: "module",
+        exports: { ".": "./src/index.js" },
+      }),
+      "backend/src/index.js": `import { LayerFS } from "@layerfs/agent";
+export class LayerFSBackend {
+  static of(client) { return { store: { project: { get_history: async () => ({ agent: typeof LayerFS, step: process.env.LAYERFS_TRACE_STEP }) } }, daemon: {} }; }
+}`,
+    };
+    for (const [name, text] of Object.entries(files)) {
+      await mkdir(join(scope, name, ".."), { recursive: true });
+      await writeFile(join(scope, name), text);
+    }
+    const options: RuntimeOptions = {
+      agent: randomUUID(),
+      deployment: { HOME: dir, VOLUME: "v1", NATIVE: "/addon.node" },
+    };
+    const before = { ...process.env };
+    const connect = await loadClient(
+      join(scope, "agent/src/index.js"),
+      "demo",
+      options,
+    );
+    const sdk = await connect("/source");
+    assert.deepEqual(sdk.created, { kind: "Initialized", folder: "/source" });
+    assert.ok(!(await connect()).created);
+    required(sdk.options).traceStep = "call-7";
+    assert.deepEqual(await sdk.project.list_branches(), {
+      volume: "v1",
+      trace: options.trace,
+      step: "call-7",
+    });
+    assert.deepEqual(
+      await invoke(required(options.backend).store, "project", "get_history"),
+      { agent: "function", step: options.agent },
+    );
+    assert.deepEqual(await required(options.progress)(), {
+      op: "runtime.project.get_init",
+      args: { project: "demo", home: dir },
+      native: "/addon.node",
+    });
+    assert.deepEqual({ ...process.env }, before);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });

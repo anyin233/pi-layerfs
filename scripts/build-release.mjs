@@ -128,7 +128,7 @@ const manifest = {
   appleSiliconEmulation: target === "macos",
   image,
   sourceRevision,
-  layerfsRevision: "1aa56ece78e2ecd71b46cf07076100345df47239",
+  layerfsRevision: "ad78914e36b258b360daf13aec164b5655814689",
   piVersion: "1.4.0",
   externalRequirements: [
     target === "macos" ? "macOS Intel or Apple Silicon (amd64 emulation)" : "Linux x86_64",

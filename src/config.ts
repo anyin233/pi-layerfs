@@ -4,7 +4,10 @@ import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const bundledSDK = fileURLToPath(
-  new URL("../vendor/layerfs/sdk/js/src/index.js", import.meta.url),
+  new URL(
+    "../vendor/layerfs/node_modules/@layerfs/agent/src/index.js",
+    import.meta.url,
+  ),
 );
 export function required<T>(value: T | null | undefined, name = "value"): T {
   if (value === null || value === undefined)
@@ -100,7 +103,7 @@ export async function loadConfig(
     throw new Error("timeoutSeconds must be 1..86400");
   if (!["silent", "error", "info"].includes(config.logLevel))
     throw new Error("Invalid logLevel");
-  if (config.sdk !== "@layerfs/sdk")
+  if (config.sdk !== "@layerfs/agent")
     config.sdk = resolve(dirname(file), config.sdk);
   return config;
 }

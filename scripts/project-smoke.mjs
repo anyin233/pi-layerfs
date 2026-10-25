@@ -32,7 +32,7 @@ try {
     (await runtime.sdk.fs.read(config.branch, "/README.md")).text,
     source,
   );
-  workspace = await runtime.sdk.workspace.mount(config.branch);
+  workspace = await runtime.mount(config.branch);
   const result = await runtime.sdk.workspace.exec(
     workspace,
     "printf 'saved in LayerFS\\n' > generated.txt; node -e 'if (6 * 7 !== 42) process.exit(1)'",

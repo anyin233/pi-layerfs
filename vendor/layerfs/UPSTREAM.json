@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/Ephemeral-AI-Lab/layerfs",
-  "revision": "1aa56ece78e2ecd71b46cf07076100345df47239",
+  "revision": "ad78914e36b258b360daf13aec164b5655814689",
   "license": "MIT",
-  "sdkVersion": "1.0.0",
-  "vendoring": "Unmodified src/ and operator/ JavaScript; runtime-only package metadata. Native artifacts are built from this revision and distributed in release assets."
+  "sdkVersion": "1.1.0",
+  "vendoring": "Unmodified package.json and src/ of api/agent/sdk (@layerfs/agent) and api/backend (@layerfs/backend) in node_modules/@layerfs/. Native artifacts are built from this revision and distributed in release assets."
 }

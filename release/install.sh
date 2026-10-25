@@ -47,7 +47,7 @@ fi
 stage=$(mktemp -d "$prefix/.install-XXXXXXXX")
 trap 'rm -rf -- "$stage"' EXIT
 tar -xzf "$bundle/plugin.tgz" -C "$stage"
-[[ -f "$stage/package/dist/extension.js" && -f "$stage/package/vendor/layerfs/sdk/js/native/layerfs.node" ]] || { echo 'Incomplete plugin artifact.' >&2; exit 1; }
+[[ -f "$stage/package/dist/extension.js" && -f "$stage/package/vendor/layerfs/node_modules/binding/layerfs.node" ]] || { echo 'Incomplete plugin artifact.' >&2; exit 1; }
 [[ -x "$stage/package/vendor/layerfs/bin/layerfs-daemon" ]] || { echo 'Missing executable daemon.' >&2; exit 1; }
 if [[ -e "$prefix/package" ]]; then
   backup="$prefix/package.previous.$(date +%s).$$"
@@ -73,7 +73,7 @@ docker run --rm --platform linux/amd64 -v "$volume:/layerfs-store" --entrypoint 
   printf 'export PI_LAYERFS_CONTROL_VOLUME=%q\n' "$volume"
   printf 'export LAYERFS_DOCKER=%q\n' /var/run/docker.sock
   printf 'export LAYERFS_DAEMON=%q\n' /opt/pi-layerfs/vendor/layerfs/bin/layerfs-daemon
-  printf 'export LAYERFS_NATIVE=%q\n' /opt/pi-layerfs/vendor/layerfs/sdk/js/native/layerfs.node
+  printf 'export LAYERFS_NATIVE=%q\n' /opt/pi-layerfs/vendor/layerfs/node_modules/binding/layerfs.node
   printf 'export LAYERFS_STORE_PATH=%q\n' /layerfs-store/global/store.sqlite
   printf 'export LAYERFS_CONTAINER_PREFIX=%q\n' "pi-lfs-$instance-"
   printf 'export PI_LAYERFS_INSTANCE=%q\n' "$instance"
